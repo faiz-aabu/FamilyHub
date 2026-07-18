@@ -1,0 +1,24 @@
+@{
+    // This account page keeps the same polished layout as the other FamilyHub content pages.
+    ViewData["Title"] = "Manage Account";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="hero-card text-white p-4 p-md-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle hero-badge p-3 mb-3">
+                    <span class="fs-3">⚙️</span>
+                </div>
+                <h1 class="h3 fw-bold mb-2">Manage your account</h1>
+                <p class="mb-0 text-light">This starter page is ready for future profile management features such as password updates and email changes.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-light rounded-3 border-0" role="alert">
+                    You are signed in as <strong>@User.Identity?.Name</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

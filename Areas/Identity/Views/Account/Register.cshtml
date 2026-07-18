@@ -1,0 +1,71 @@
+@model FamilyHub.Models.RegisterViewModel
+@{
+    // This page keeps the same FamilyHub look and feel as the dashboard and member pages.
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="hero-card text-white p-4 p-md-5 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle hero-badge p-3 mb-3">
+                    <span class="fs-3">🌿</span>
+                </div>
+                <h1 class="h3 fw-bold mb-2">Create your account</h1>
+                <p class="mb-0 text-light">Join FamilyHub and start managing your family members securely.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form asp-action="Register" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-person"></i></span>
+                            <input asp-for="FullName" class="form-control rounded-end-3 border-0 bg-light" placeholder="John Doe" />
+                        </div>
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control rounded-end-3 border-0 bg-light" placeholder="name@example.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Password" class="form-control rounded-end-3 border-0 bg-light" placeholder="Enter password" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-shield-lock"></i></span>
+                            <input asp-for="ConfirmPassword" class="form-control rounded-end-3 border-0 bg-light" placeholder="Repeat password" />
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 py-2 w-100 mb-3">Register</button>
+
+                    <div class="text-center small">
+                        <a asp-page="./Login" class="text-decoration-none fw-semibold">Already have an account? Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

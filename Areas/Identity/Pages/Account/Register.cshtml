@@ -1,0 +1,71 @@
+@page
+@model FamilyHub.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="hero-card text-white p-4 p-md-5 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle hero-badge p-3 mb-3">
+                    <span class="fs-3">🌿</span>
+                </div>
+                <h1 class="h3 fw-bold mb-2">Create your account</h1>
+                <p class="mb-0 text-light">Join FamilyHub and start managing your family members securely.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.FullName" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-person"></i></span>
+                            <input asp-for="Input.FullName" class="form-control rounded-end-3 border-0 bg-light" placeholder="John Doe" />
+                        </div>
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Input.Email" class="form-control rounded-end-3 border-0 bg-light" placeholder="name@example.com" />
+                        </div>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Input.Password" class="form-control rounded-end-3 border-0 bg-light" />
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.ConfirmPassword" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-shield-lock"></i></span>
+                            <input asp-for="Input.ConfirmPassword" class="form-control rounded-end-3 border-0 bg-light" />
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-2">Register</button>
+
+                    <div class="text-center mt-3">
+                        <a asp-page="./Login" class="text-decoration-none">Already have an account? Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

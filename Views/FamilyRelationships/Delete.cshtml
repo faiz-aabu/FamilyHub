@@ -1,0 +1,30 @@
+@model FamilyHub.Models.FamilyRelationship
+
+@{
+    ViewData["Title"] = "Delete Relationship";
+}
+
+<h2 class="mb-4">Delete Relationship</h2>
+
+<div class="alert alert-warning">
+    <p>Are you sure you want to delete this relationship?</p>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Person</dt>
+    <dd class="col-sm-9">@Model.Member?.FullName</dd>
+
+    <dt class="col-sm-3">Relationship Type</dt>
+    <dd class="col-sm-9">@Model.RelationshipType</dd>
+
+    <dt class="col-sm-3">Related Person</dt>
+    <dd class="col-sm-9">@Model.RelatedMember?.FullName</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>

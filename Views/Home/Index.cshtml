@@ -1,0 +1,229 @@
+﻿@model FamilyHub.Models.DashboardViewModel
+
+@{
+    // This page title appears in the browser tab and in the layout.
+    ViewData["Title"] = "Dashboard";
+}
+
+<section class="hero-card text-white p-5 rounded-4 shadow-lg">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="text-uppercase small fw-bold mb-3 text-info">Welcome to FamilyHub</p>
+            <h1 class="display-4 fw-bold mb-3">Manage and organize your family information easily.</h1>
+            <p class="lead mb-4">FamilyHub gives you a calm and simple place to keep family notes, relationships, and important dates in one location.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-light btn-lg px-4 rounded-pill" asp-controller="FamilyMembers" asp-action="Create">➕ Add Family Member</a>
+                <a class="btn btn-outline-light btn-lg px-4 rounded-pill" asp-controller="FamilyMembers" asp-action="Index">👥 View Members</a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center">
+            <div class="hero-badge p-4 rounded-circle shadow">
+                <span class="display-1 fw-bold">👨‍👩‍👧‍👦</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row mt-4 g-4">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Total Members</h3>
+                        <p class="text-muted mb-0">All family records</p>
+                    </div>
+                    <span class="display-6">👨‍👩‍👧‍👦</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.TotalFamilyMembers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Male Members</h3>
+                        <p class="text-muted mb-0">Registered males</p>
+                    </div>
+                    <span class="display-6">👨</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.TotalMales</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Female Members</h3>
+                        <p class="text-muted mb-0">Registered females</p>
+                    </div>
+                    <span class="display-6">👩</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.TotalFemales</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Married</h3>
+                        <p class="text-muted mb-0">Marital count</p>
+                    </div>
+                    <span class="display-6">💍</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.MarriedMembers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Registered Users</h3>
+                        <p class="text-muted mb-0">All Identity accounts</p>
+                    </div>
+                    <span class="display-6">🔐</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.TotalRegisteredUsers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Average Age</h3>
+                        <p class="text-muted mb-0">Based on DOB</p>
+                    </div>
+                    <span class="display-6">📈</span>
+                </div>
+                <div class="display-6 fw-bold">@Model.AverageAge.ToString("0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Youngest / Oldest</h3>
+                        <p class="text-muted mb-0">Birth records</p>
+                    </div>
+                    <span class="display-6">🎂</span>
+                </div>
+                <div class="small fw-semibold">Youngest: @Model.YoungestMember</div>
+                <div class="small fw-semibold mt-1">Oldest: @Model.OldestMember</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row mt-4 g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="h5 fw-bold mb-1">🎂 Upcoming Birthdays</h3>
+                        <p class="text-muted mb-0">The next 30 days</p>
+                    </div>
+                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">View all</a>
+                </div>
+
+                @if (Model.UpcomingBirthdays.Any())
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var birthday in Model.UpcomingBirthdays)
+                        {
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 border">
+                                <img src="@(string.IsNullOrWhiteSpace(birthday.ImagePath) ? "/images/family/default-avatar.png" : birthday.ImagePath)"
+                                     alt="@birthday.Name"
+                                     class="rounded-circle"
+                                     style="width:54px;height:54px;object-fit:cover;" />
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@birthday.Name</div>
+                                    <div class="small text-muted">@birthday.Birthday.ToString("dd MMM yyyy")</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-dark rounded-pill">@birthday.DaysRemaining day@(birthday.DaysRemaining == 1 ? string.Empty : "s")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-light rounded-4 mb-0" role="alert">
+                        No birthdays are coming up in the next 30 days.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="h5 fw-bold mb-1">🕒 Recent Members</h3>
+                        <p class="text-muted mb-0">Newest family records</p>
+                    </div>
+                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">Browse</a>
+                </div>
+
+                @if (Model.RecentMembers.Any())
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var member in Model.RecentMembers)
+                        {
+                            <a asp-controller="FamilyMembers" asp-action="Details" asp-route-id="@member.Id" class="text-decoration-none text-dark">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-4 border hover-card">
+                                    <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)"
+                                         alt="@member.Name"
+                                         class="rounded-circle"
+                                         style="width:54px;height:54px;object-fit:cover;" />
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">@member.Name</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(member.Occupation) ? "No occupation" : member.Occupation)</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(member.Relationship) ? "No relationship" : member.Relationship)</div>
+                                    </div>
+                                    <div class="small text-muted text-end">@member.CreatedAt.ToString("dd MMM")</div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-light rounded-4 mb-0" role="alert">
+                        No members have been added yet. Start by adding your first family member.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row mt-4 g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 text-center">
+                <h3 class="h5 fw-bold mb-3">Quick Actions</h3>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a asp-controller="FamilyMembers" asp-action="Create" class="btn btn-dark rounded-pill px-4">➕ Add Family Member</a>
+                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">👥 View Members</a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4">🎂 Upcoming Birthdays</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,121 @@
+@model FamilyHub.Models.ManageUsersIndexViewModel
+
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Manage Users</h1>
+                <p class="text-muted mb-0">Admin controls for viewing, editing, and managing user accounts.</p>
+            </div>
+            <form method="get" class="w-100 w-lg-50">
+                <div class="input-group">
+                    <input class="form-control rounded-pill" type="text" name="searchTerm" value="@Model.SearchTerm" placeholder="Search by full name or email" />
+                    <button class="btn btn-dark rounded-pill" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="alert alert-success rounded-4">@successMessage</div>
+        }
+
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="alert alert-danger rounded-4">@errorMessage</div>
+        }
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Email Confirmed</th>
+                        <th>Account Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users.Any())
+                    {
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td><span class="badge rounded-pill bg-dark">@user.Role</span></td>
+                                <td>
+                                    @if (user.EmailConfirmed)
+                                    {
+                                        <span class="badge rounded-pill bg-success">Confirmed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-warning text-dark">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge rounded-pill bg-danger">Locked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a class="btn btn-outline-dark btn-sm rounded-pill" asp-action="Details" asp-route-id="@user.Id">View</a>
+                                        <a class="btn btn-outline-secondary btn-sm rounded-pill" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
+                                        @if (user.IsLocked)
+                                        {
+                                            <form asp-action="Unlock" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button class="btn btn-outline-success btn-sm rounded-pill" type="submit">Unlock</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Lock" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button class="btn btn-outline-danger btn-sm rounded-pill" type="submit">Lock</button>
+                                            </form>
+                                        }
+                                        <a class="btn btn-outline-danger btn-sm rounded-pill" asp-action="Delete" asp-route-id="@user.Id">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No users found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="User pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+                    {
+                        <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : string.Empty)">
+                            <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-page="@pageNumber">@pageNumber</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

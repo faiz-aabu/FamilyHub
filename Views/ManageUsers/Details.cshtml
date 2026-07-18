@@ -1,0 +1,50 @@
+@model FamilyHub.Models.UserDetailsViewModel
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">User Details</h1>
+                <p class="text-muted mb-0">View account details and current status.</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">Back to Users</a>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded-4 p-3 h-100">
+                    <h2 class="h6 fw-bold mb-3">Account Information</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Full Name</dt>
+                        <dd class="col-sm-7">@Model.FullName</dd>
+                        <dt class="col-sm-5">Email</dt>
+                        <dd class="col-sm-7">@Model.Email</dd>
+                        <dt class="col-sm-5">Username</dt>
+                        <dd class="col-sm-7">@Model.UserName</dd>
+                        <dt class="col-sm-5">Role</dt>
+                        <dd class="col-sm-7"><span class="badge rounded-pill bg-dark">@Model.Role</span></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded-4 p-3 h-100">
+                    <h2 class="h6 fw-bold mb-3">Security Status</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Date Joined</dt>
+                        <dd class="col-sm-6">@(Model.DateJoined?.ToString("dd MMM yyyy") ?? "N/A")</dd>
+                        <dt class="col-sm-6">Email Confirmed</dt>
+                        <dd class="col-sm-6">@(Model.EmailConfirmed ? "Yes" : "No")</dd>
+                        <dt class="col-sm-6">Lockout Enabled</dt>
+                        <dd class="col-sm-6">@(Model.LockoutEnabled ? "Yes" : "No")</dd>
+                        <dt class="col-sm-6">Lockout End</dt>
+                        <dd class="col-sm-6">@(Model.LockoutEnd?.ToString("dd MMM yyyy HH:mm") ?? "None")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

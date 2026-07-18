@@ -1,0 +1,22 @@
+@{
+    // This page uses the same friendly card style as the rest of the dashboard experience.
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden text-center">
+            <div class="hero-card text-white p-4 p-md-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle hero-badge p-3 mb-3">
+                    <span class="fs-3">🚫</span>
+                </div>
+                <h1 class="h3 fw-bold mb-2">Access denied</h1>
+                <p class="mb-0 text-light">You need to sign in before you can view this page.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <a asp-action="Login" class="btn btn-dark rounded-pill px-4">Go to login</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+@model FamilyHub.Models.UserDetailsViewModel
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">User Details</h1>
+                <p class="text-muted mb-0">Administrative view of the selected account.</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">Full Name</dt>
+            <dd class="col-sm-9">@Model.FullName</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+
+            <dt class="col-sm-3">Username</dt>
+            <dd class="col-sm-9">@Model.UserName</dd>
+
+            <dt class="col-sm-3">Phone Number</dt>
+            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+            <dt class="col-sm-3">Current Role</dt>
+            <dd class="col-sm-9"><span class="badge rounded-pill bg-primary">@Model.Role</span></dd>
+
+            <dt class="col-sm-3">Account Created</dt>
+            <dd class="col-sm-9">@((Model.DateJoined is null) ? "-" : Model.DateJoined.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm"))</dd>
+
+            <dt class="col-sm-3">Email Confirmed</dt>
+            <dd class="col-sm-9">@(Model.EmailConfirmed ? "Yes" : "No")</dd>
+
+            <dt class="col-sm-3">Lockout Enabled</dt>
+            <dd class="col-sm-9">@(Model.LockoutEnabled ? "Yes" : "No")</dd>
+
+            <dt class="col-sm-3">Lockout End</dt>
+            <dd class="col-sm-9">@((Model.LockoutEnd is null || Model.LockoutEnd <= DateTimeOffset.UtcNow) ? "None" : Model.LockoutEnd.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm"))</dd>
+        </dl>
+    </div>
+</div>

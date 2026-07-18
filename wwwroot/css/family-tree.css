@@ -1,0 +1,95 @@
+.family-tree-page {
+    padding: 0.5rem 0 2rem;
+}
+
+.family-tree-graph {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+}
+
+.family-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    min-width: max-content;
+}
+
+.family-tree-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 280px;
+    max-width: 320px;
+    padding: 1rem;
+    border: 1px solid rgba(13, 110, 253, 0.12);
+    border-radius: 1.15rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    color: #1f2937;
+}
+
+.family-tree-card:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 0.6rem 1.4rem rgba(15, 23, 42, 0.14);
+}
+
+.family-tree-card img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0.2rem 0.6rem rgba(15, 23, 42, 0.12);
+}
+
+.family-tree-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.family-tree-card--match {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18), 0 0.6rem 1.4rem rgba(15, 23, 42, 0.14);
+}
+
+.family-tree-card--dim {
+    opacity: 0.45;
+}
+
+.family-tree-connector {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    background: #0d6efd;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 0.2rem 0.6rem rgba(13, 110, 253, 0.16);
+}
+
+@media (max-width: 768px) {
+    .family-tree-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .family-tree-card {
+        min-width: 240px;
+        max-width: none;
+    }
+
+    .family-tree-connector {
+        min-width: 0;
+        width: 100%;
+    }
+}

@@ -1,0 +1,56 @@
+@model IEnumerable<FamilyHub.Models.FamilyRelationship>
+
+@{
+    ViewData["Title"] = "Family Relationships";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Family Relationships</h2>
+        <p class="text-muted mb-0">Track how family members connect to each other.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Add Relationship</a>
+</div>
+
+<form asp-action="Index" method="get" class="row g-2 mb-4">
+    <div class="col-md-10">
+        <input name="searchTerm" value="@ViewBag.SearchTerm" class="form-control" placeholder="Search by person, relative, or relationship type" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-secondary w-100">Search</button>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No relationships found yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Person</th>
+                    <th>Relationship Type</th>
+                    <th>Related Person</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var relationship in Model)
+                {
+                    <tr>
+                        <td>@relationship.Member?.FullName</td>
+                        <td>@relationship.RelationshipType</td>
+                        <td>@relationship.RelatedMember?.FullName</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@relationship.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@relationship.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

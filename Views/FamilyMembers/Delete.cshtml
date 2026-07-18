@@ -1,0 +1,51 @@
+@model FamilyHub.Models.FamilyMember
+
+@{
+    ViewData["Title"] = "Delete Family Member";
+    var imagePath = string.IsNullOrWhiteSpace(Model.ImagePath)
+        ? "/images/family/default-avatar.png"
+        : Model.ImagePath;
+    var age = Model.Age.HasValue ? Model.Age.Value.ToString() : "Not available";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <img src="@imagePath"
+                             alt="Profile picture"
+                             class="rounded-circle border border-4 border-white shadow"
+                             style="width: 150px; height: 150px; object-fit: cover;" />
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold mb-2">@Model.FirstName @Model.LastName</h2>
+                        <p class="text-muted mb-1">@(string.IsNullOrWhiteSpace(Model.Occupation) ? "No occupation provided" : Model.Occupation)</p>
+                        <p class="text-muted mb-0">Age: @age</p>
+                        <p class="text-muted">State: @(string.IsNullOrWhiteSpace(Model.State) ? "Not provided" : Model.State)</p>
+                        <p class="text-muted">Nationality: @(string.IsNullOrWhiteSpace(Model.Nationality) ? "Not provided" : Model.Nationality)</p>
+                    </div>
+
+                    <div class="alert alert-warning rounded-4 border-0" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Are you sure you want to permanently delete this family member?
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
+                        <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                <i class="bi bi-trash3-fill me-2"></i>Delete
+                            </button>
+                        </form>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary rounded-pill px-4">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

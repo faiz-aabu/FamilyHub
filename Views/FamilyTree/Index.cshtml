@@ -1,0 +1,112 @@
+@model FamilyHub.Models.FamilyTreeViewModel
+
+@{
+    ViewData["Title"] = "Family Tree";
+    var linkedIds = Model.Links
+        .SelectMany(link => new[] { link.MemberId, link.RelatedMemberId })
+        .Distinct()
+        .ToHashSet();
+    var isolatedMembers = Model.Members.Where(member => !linkedIds.Contains(member.Id)).ToList();
+}
+
+<div class="family-tree-page">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Family Tree</h1>
+            <p class="text-muted mb-0">Explore family connections visually and jump into a member's details instantly.</p>
+        </div>
+        <div class="w-100 w-lg-50">
+            <label class="visually-hidden" for="familyTreeSearch">Search family members</label>
+            <input id="familyTreeSearch" class="form-control rounded-pill shadow-sm" type="text" placeholder="Search by name" value="@Model.SearchTerm" />
+        </div>
+    </div>
+
+    @if (!Model.Members.Any())
+    {
+        <div class="alert alert-light border rounded-4 shadow-sm">
+            <p class="mb-0 fw-semibold">No family members found.</p>
+        </div>
+    }
+    else
+    {
+        <div class="family-tree-graph" id="familyTreeGraph">
+            @foreach (var link in Model.Links)
+            {
+                var member = Model.Members.FirstOrDefault(item => item.Id == link.MemberId);
+                var relatedMember = Model.Members.FirstOrDefault(item => item.Id == link.RelatedMemberId);
+
+                if (member is null || relatedMember is null)
+                {
+                    continue;
+                }
+
+                <div class="family-tree-row">
+                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = member.Id })" data-search-text="@member.FullName @member.Relationship @member.Gender @member.DateOfBirth?.ToString("dd MMM yyyy")">
+                        <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)" alt="@member.FullName" />
+                        <div class="family-tree-card-body">
+                            <h5 class="fw-bold mb-1">@member.FullName</h5>
+                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(member.Relationship) ? "Family member" : member.Relationship)</p>
+                            <div class="d-flex flex-wrap gap-2 text-muted small">
+                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(member.Gender) ? "Unknown" : member.Gender)</span>
+                                <span><i class="bi bi-calendar2-event me-1"></i>@(member.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="family-tree-connector" aria-hidden="true">
+                        <span>@link.RelationshipType</span>
+                    </div>
+
+                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = relatedMember.Id })" data-search-text="@relatedMember.FullName @relatedMember.Relationship @relatedMember.Gender @relatedMember.DateOfBirth?.ToString("dd MMM yyyy")">
+                        <img src="@(string.IsNullOrWhiteSpace(relatedMember.ImagePath) ? "/images/family/default-avatar.png" : relatedMember.ImagePath)" alt="@relatedMember.FullName" />
+                        <div class="family-tree-card-body">
+                            <h5 class="fw-bold mb-1">@relatedMember.FullName</h5>
+                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(relatedMember.Relationship) ? "Family member" : relatedMember.Relationship)</p>
+                            <div class="d-flex flex-wrap gap-2 text-muted small">
+                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(relatedMember.Gender) ? "Unknown" : relatedMember.Gender)</span>
+                                <span><i class="bi bi-calendar2-event me-1"></i>@(relatedMember.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+
+            @foreach (var member in isolatedMembers)
+            {
+                <div class="family-tree-row">
+                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = member.Id })" data-search-text="@member.FullName @member.Relationship @member.Gender @member.DateOfBirth?.ToString("dd MMM yyyy")">
+                        <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)" alt="@member.FullName" />
+                        <div class="family-tree-card-body">
+                            <h5 class="fw-bold mb-1">@member.FullName</h5>
+                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(member.Relationship) ? "Family member" : member.Relationship)</p>
+                            <div class="d-flex flex-wrap gap-2 text-muted small">
+                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(member.Gender) ? "Unknown" : member.Gender)</span>
+                                <span><i class="bi bi-calendar2-event me-1"></i>@(member.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const searchInput = document.getElementById('familyTreeSearch');
+        const cards = Array.from(document.querySelectorAll('.family-tree-card'));
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.trim().toLowerCase();
+
+                cards.forEach(card => {
+                    const text = (card.getAttribute('data-search-text') || '').toLowerCase();
+                    const shouldMatch = text.includes(searchTerm);
+                    card.classList.toggle('family-tree-card--match', shouldMatch);
+                    card.classList.toggle('family-tree-card--dim', !shouldMatch && searchTerm.length > 0);
+                });
+            });
+        }
+    </script>
+}

@@ -1,0 +1,25 @@
+@model FamilyHub.Models.UserDeleteViewModel
+
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <h1 class="h3 fw-bold mb-3">Delete User</h1>
+        <p class="text-muted">Are you sure you want to delete this user account?</p>
+
+        <div class="border rounded-4 p-3 mb-4">
+            <p class="mb-1 fw-semibold">@Model.FullName</p>
+            <p class="mb-0 text-muted">@Model.Email</p>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger rounded-pill px-4">Delete</button>
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

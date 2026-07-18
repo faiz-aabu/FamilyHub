@@ -1,0 +1,186 @@
+@model FamilyHub.Models.FamilyMember
+
+@{
+    ViewData["Title"] = "Family Member Profile";
+    var imagePath = string.IsNullOrWhiteSpace(Model.ImagePath)
+        ? "/images/family/default-avatar.png"
+        : Model.ImagePath;
+    var age = Model.Age.HasValue ? Model.Age.Value.ToString() : "Not available";
+}
+
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-3 text-center">
+                            <img src="@imagePath"
+                                 alt="Profile picture"
+                                 class="img-fluid rounded-circle border border-4 border-white shadow"
+                                 style="width: 180px; height: 180px; object-fit: cover;" />
+                        </div>
+                        <div class="col-md-9">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                                <div>
+                                    <h1 class="display-6 fw-bold mb-1">@Model.FirstName @Model.LastName</h1>
+                                    <p class="text-muted mb-3">@(!string.IsNullOrWhiteSpace(Model.Occupation) ? Model.Occupation : "No occupation provided")</p>
+                                    <span class="badge bg-dark rounded-pill px-3 py-2">Age: @age</span>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+                                        <i class="bi bi-arrow-left"></i> Back
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-dark rounded-pill">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill">
+                                        <i class="bi bi-trash3-fill"></i> Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-person-lines-fill me-2"></i>Personal Information</h4>
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">First Name</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.FirstName) ? Model.FirstName : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Last Name</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.LastName) ? Model.LastName : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Gender</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Gender) ? Model.Gender : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Date of Birth</div>
+                            <div class="fw-semibold">@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Occupation</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Occupation) ? Model.Occupation : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">School</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.School) ? Model.School : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Phone Number</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.PhoneNumber) ? Model.PhoneNumber : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Email</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Email) ? Model.Email : "Not provided")</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small">Address</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Address) ? Model.Address : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">State</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.State) ? Model.State : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Nationality</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Nationality) ? Model.Nationality : "Not provided")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-heart-pulse me-2"></i>Medical Information</h4>
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Blood Group</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.BloodGroup) ? Model.BloodGroup : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="text-muted small">Genotype</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Genotype) ? Model.Genotype : "Not provided")</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small">Allergies</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Allergies) ? Model.Allergies : "Not provided")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0"><i class="bi bi-diagram-3 me-2"></i>Family Relationships</h4>
+                        <a asp-controller="FamilyRelationships" asp-action="Create" class="btn btn-sm btn-outline-primary">Add Relationship</a>
+                    </div>
+
+                    @if (Model.Relationships is null || !Model.Relationships.Any())
+                    {
+                        <div class="alert alert-info mb-0">No relationships have been added for this person yet.</div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            @foreach (var relationship in Model.Relationships)
+                            {
+                                <div class="col-md-6">
+                                    <div class="border rounded-3 p-3 h-100">
+                                        <div class="text-muted small">Relationship</div>
+                                        <div class="fw-semibold">@relationship.RelationshipType</div>
+                                        <div class="text-muted small mt-3">Related Member</div>
+                                        <div class="fw-semibold">@relationship.RelatedMember?.FullName</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-chat-square-text me-2"></i>About</h4>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="text-muted small">Hobbies</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Hobbies) ? Model.Hobbies : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-muted small">Marital Status</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.MaritalStatus) ? Model.MaritalStatus : "Not provided")</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-muted small">Relationship</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Relationship) ? Model.Relationship : "Not provided")</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small">Biography</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Biography) ? Model.Biography : "Not provided")</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small">Notes</div>
+                            <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.Notes) ? Model.Notes : "Not provided")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
