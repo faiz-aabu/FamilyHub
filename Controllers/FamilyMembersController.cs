@@ -69,10 +69,13 @@ public class FamilyMembersController : Controller
     /// <param name="model">The posted form values.</param>
     /// <returns>The appropriate view or redirect.</returns>
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromForm] FamilyMemberCreateViewModel model)
     {
         ViewBag.RelationshipOptions = GetRelationshipOptions();
         ViewBag.RelatedFamilyMembers = BuildRelatedFamilyMembersList(null, model.RelatedFamilyMemberId);
+
+        ValidateImageFile(model.ImageFile);
 
         if (!ModelState.IsValid)
         {
@@ -178,6 +181,8 @@ public class FamilyMembersController : Controller
         {
             return NotFound();
         }
+
+        ValidateImageFile(imageFile);
 
         var existingFamilyMember = await _familyMemberService.GetByIdAsync(id);
 
@@ -422,12 +427,25 @@ public class FamilyMembersController : Controller
             return existingImagePath ?? "/images/family/default-avatar.png";
         }
 
+        // Validate size before saving.
+        const long maxFileSize = 2 * 1024 * 1024; // 2 MB
+        if (imageFile.Length > maxFileSize)
+        {
+            throw new InvalidOperationException("Uploaded image exceeds the maximum allowed size of 2 MB.");
+        }
+
         // Create the uploads folder if it does not exist yet.
         var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "family");
         Directory.CreateDirectory(uploadsFolder);
 
+        var extension = Path.GetExtension(imageFile.FileName);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            throw new InvalidOperationException("Invalid image file extension.");
+        }
+
         // Use a unique file name so new uploads never overwrite an older image by mistake.
-        var fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(imageFile.FileName);
+        var fileName = Guid.NewGuid().ToString("N") + extension.ToLowerInvariant();
         var filePath = Path.Combine(uploadsFolder, fileName);
 
         await using (var stream = new FileStream(filePath, FileMode.Create))
@@ -442,6 +460,36 @@ public class FamilyMembersController : Controller
     /// Builds the relationship dropdown options for the create and edit forms.
     /// </summary>
     /// <returns>A list of bootstrap-friendly select list items.</returns>
+    private void ValidateImageFile(IFormFile? imageFile)
+    {
+        if (imageFile is null || imageFile.Length == 0)
+        {
+            return;
+        }
+
+        const long maxFileSize = 2 * 1024 * 1024; // 2 MB
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+        var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+
+        if (imageFile.Length > maxFileSize)
+        {
+            ModelState.AddModelError(nameof(imageFile), "Uploaded image must be 2 MB or smaller.");
+            return;
+        }
+
+        if (!allowedContentTypes.Contains(imageFile.ContentType))
+        {
+            ModelState.AddModelError(nameof(imageFile), "Only JPEG and PNG images are allowed.");
+            return;
+        }
+
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            ModelState.AddModelError(nameof(imageFile), "Only JPEG and PNG images are allowed.");
+        }
+    }
+
     private static List<SelectListItem> GetRelationshipOptions()
     {
         return new List<SelectListItem>
