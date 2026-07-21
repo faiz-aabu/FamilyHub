@@ -6,25 +6,32 @@
 
 <h2 class="mb-4">Edit Relationship</h2>
 
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>Please fix the highlighted issues before saving.</strong>
+    </div>
+}
+
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
     <div class="mb-3">
         <label asp-for="MemberId" class="form-label"></label>
-        <select asp-for="MemberId" asp-items="ViewBag.Members" class="form-select"></select>
+        <select asp-for="MemberId" asp-items="ViewBag.Members" class="form-select @(ViewData.ModelState["MemberId"]?.Errors.Count > 0 ? "is-invalid" : "")"></select>
         <span asp-validation-for="MemberId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="RelationshipType" class="form-label"></label>
-        <input asp-for="RelationshipType" class="form-control" />
+        <select asp-for="RelationshipType" asp-items="ViewBag.RelationshipTypes" class="form-select @(ViewData.ModelState["RelationshipType"]?.Errors.Count > 0 ? "is-invalid" : "")"></select>
         <span asp-validation-for="RelationshipType" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="RelatedMemberId" class="form-label"></label>
-        <select asp-for="RelatedMemberId" asp-items="ViewBag.Members" class="form-select"></select>
+        <select asp-for="RelatedMemberId" asp-items="ViewBag.Members" class="form-select @(ViewData.ModelState["RelatedMemberId"]?.Errors.Count > 0 ? "is-invalid" : "")"></select>
         <span asp-validation-for="RelatedMemberId" class="text-danger"></span>
     </div>
 

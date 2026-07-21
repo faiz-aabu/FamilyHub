@@ -2,18 +2,13 @@
 
 @{
     ViewData["Title"] = "Family Tree";
-    var linkedIds = Model.Links
-        .SelectMany(link => new[] { link.MemberId, link.RelatedMemberId })
-        .Distinct()
-        .ToHashSet();
-    var isolatedMembers = Model.Members.Where(member => !linkedIds.Contains(member.Id)).ToList();
 }
 
 <div class="family-tree-page">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1">Family Tree</h1>
-            <p class="text-muted mb-0">Explore family connections visually and jump into a member's details instantly.</p>
+            <p class="text-muted mb-0">A professional genealogy view that builds itself from your saved family relationships.</p>
         </div>
         <div class="w-100 w-lg-50">
             <label class="visually-hidden" for="familyTreeSearch">Search family members</label>
@@ -29,84 +24,427 @@
     }
     else
     {
-        <div class="family-tree-graph" id="familyTreeGraph">
-            @foreach (var link in Model.Links)
-            {
-                var member = Model.Members.FirstOrDefault(item => item.Id == link.MemberId);
-                var relatedMember = Model.Members.FirstOrDefault(item => item.Id == link.RelatedMemberId);
+        <div class="family-tree-toolbar rounded-4 shadow-sm border p-3 mb-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button type="button" id="zoomInBtn" class="btn btn-outline-primary rounded-pill"><i class="bi bi-plus-lg me-1"></i>Zoom +</button>
+                <button type="button" id="zoomOutBtn" class="btn btn-outline-primary rounded-pill"><i class="bi bi-dash-lg me-1"></i>Zoom -</button>
+                <button type="button" id="fitViewBtn" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrows-fullscreen me-1"></i>Fit to Screen</button>
+                <button type="button" id="expandAllBtn" class="btn btn-primary rounded-pill"><i class="bi bi-arrows-expand me-1"></i>Expand All</button>
+                <button type="button" id="collapseAllBtn" class="btn btn-outline-dark rounded-pill"><i class="bi bi-arrows-collapse me-1"></i>Collapse All</button>
+            </div>
+            <div class="mt-3 small text-muted">
+                The tree is generated from your family data, updates automatically, and keeps the most recent generations at the top.
+            </div>
+        </div>
 
-                if (member is null || relatedMember is null)
-                {
-                    continue;
-                }
-
-                <div class="family-tree-row">
-                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = member.Id })" data-search-text="@member.FullName @member.Relationship @member.Gender @member.DateOfBirth?.ToString("dd MMM yyyy")">
-                        <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)" alt="@member.FullName" />
-                        <div class="family-tree-card-body">
-                            <h5 class="fw-bold mb-1">@member.FullName</h5>
-                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(member.Relationship) ? "Family member" : member.Relationship)</p>
-                            <div class="d-flex flex-wrap gap-2 text-muted small">
-                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(member.Gender) ? "Unknown" : member.Gender)</span>
-                                <span><i class="bi bi-calendar2-event me-1"></i>@(member.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
-                            </div>
-                        </div>
-                    </a>
-
-                    <div class="family-tree-connector" aria-hidden="true">
-                        <span>@link.RelationshipType</span>
-                    </div>
-
-                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = relatedMember.Id })" data-search-text="@relatedMember.FullName @relatedMember.Relationship @relatedMember.Gender @relatedMember.DateOfBirth?.ToString("dd MMM yyyy")">
-                        <img src="@(string.IsNullOrWhiteSpace(relatedMember.ImagePath) ? "/images/family/default-avatar.png" : relatedMember.ImagePath)" alt="@relatedMember.FullName" />
-                        <div class="family-tree-card-body">
-                            <h5 class="fw-bold mb-1">@relatedMember.FullName</h5>
-                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(relatedMember.Relationship) ? "Family member" : relatedMember.Relationship)</p>
-                            <div class="d-flex flex-wrap gap-2 text-muted small">
-                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(relatedMember.Gender) ? "Unknown" : relatedMember.Gender)</span>
-                                <span><i class="bi bi-calendar2-event me-1"></i>@(relatedMember.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
-
-            @foreach (var member in isolatedMembers)
-            {
-                <div class="family-tree-row">
-                    <a class="family-tree-card text-decoration-none" href="@Url.Action("Details", "FamilyMembers", new { id = member.Id })" data-search-text="@member.FullName @member.Relationship @member.Gender @member.DateOfBirth?.ToString("dd MMM yyyy")">
-                        <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)" alt="@member.FullName" />
-                        <div class="family-tree-card-body">
-                            <h5 class="fw-bold mb-1">@member.FullName</h5>
-                            <p class="text-muted small mb-1">@(string.IsNullOrWhiteSpace(member.Relationship) ? "Family member" : member.Relationship)</p>
-                            <div class="d-flex flex-wrap gap-2 text-muted small">
-                                <span><i class="bi bi-gender-ambiguous me-1"></i>@(string.IsNullOrWhiteSpace(member.Gender) ? "Unknown" : member.Gender)</span>
-                                <span><i class="bi bi-calendar2-event me-1"></i>@(member.DateOfBirth?.ToString("dd MMM yyyy") ?? "Unknown")</span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
+        <div class="family-tree-shell rounded-4 border shadow-sm">
+            <div id="familyTreeCanvas" class="family-tree-canvas"></div>
         </div>
     }
 </div>
 
 @section Scripts {
     <script>
+        const initialMembers = @Html.Raw(Model.MembersJson);
+        const initialLinks = @Html.Raw(Model.LinksJson);
+        const canvas = document.getElementById('familyTreeCanvas');
         const searchInput = document.getElementById('familyTreeSearch');
-        const cards = Array.from(document.querySelectorAll('.family-tree-card'));
 
-        if (searchInput) {
-            searchInput.addEventListener('input', function () {
-                const searchTerm = this.value.trim().toLowerCase();
+        const state = {
+            members: initialMembers,
+            links: initialLinks,
+            selectedId: initialMembers[0]?.id ?? null,
+            hoveredId: null,
+            searchTerm: '',
+            scale: 1,
+            offsetX: 0,
+            offsetY: 0,
+            expandedDepth: 6,
+            collapsedNodes: new Set(),
+            dragActive: false,
+            dragStartX: 0,
+            dragStartY: 0
+        };
 
-                cards.forEach(card => {
-                    const text = (card.getAttribute('data-search-text') || '').toLowerCase();
-                    const shouldMatch = text.includes(searchTerm);
-                    card.classList.toggle('family-tree-card--match', shouldMatch);
-                    card.classList.toggle('family-tree-card--dim', !shouldMatch && searchTerm.length > 0);
-                });
+        const adjacency = new Map();
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getNode(id) {
+            return state.members.find(member => member.id === id) ?? null;
+        }
+
+        function relationKind(type) {
+            const normalized = (type || '').toLowerCase();
+            if (['parent', 'child', 'father', 'mother', 'son', 'daughter', 'grandfather', 'grandmother', 'grandparent', 'grandchild'].includes(normalized)) {
+                return 'parent-child';
+            }
+            if (normalized.includes('spouse')) {
+                return 'spouse';
+            }
+            if (['brother', 'sister', 'sibling'].includes(normalized)) {
+                return 'sibling';
+            }
+            return 'other';
+        }
+
+        function buildAdjacency() {
+            adjacency.clear();
+            state.links.forEach(link => {
+                if (!adjacency.has(link.source)) {
+                    adjacency.set(link.source, []);
+                }
+                if (!adjacency.has(link.target)) {
+                    adjacency.set(link.target, []);
+                }
+                adjacency.get(link.source).push({ target: link.target, type: link.type });
+                adjacency.get(link.target).push({ target: link.source, type: link.type });
             });
         }
+
+        function visibleNodes() {
+            const rootId = state.selectedId ?? state.members[0]?.id ?? null;
+            if (!rootId) {
+                return new Set();
+            }
+
+            const visible = new Set([rootId]);
+            const queue = [{ id: rootId, depth: 0 }];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (current.depth >= state.expandedDepth) {
+                    continue;
+                }
+
+                const neighbors = adjacency.get(current.id) || [];
+                neighbors.forEach(neighbor => {
+                    const shouldHideBranch = state.collapsedNodes.has(current.id) && neighbor.target !== rootId;
+                    if (shouldHideBranch) {
+                        return;
+                    }
+
+                    if (!visible.has(neighbor.target)) {
+                        visible.add(neighbor.target);
+                        queue.push({ id: neighbor.target, depth: current.depth + 1 });
+                    }
+                });
+            }
+
+            const searchMatches = state.members.filter(member => {
+                const haystack = `${member.name} ${member.gender} ${member.relationshipLabel || ''}`.toLowerCase();
+                return haystack.includes(state.searchTerm.toLowerCase());
+            }).map(member => member.id);
+
+            if (searchMatches.length > 0) {
+                searchMatches.forEach(id => visible.add(id));
+                searchMatches.forEach(id => {
+                    (adjacency.get(id) || []).forEach(neighbor => visible.add(neighbor.target));
+                });
+            }
+
+            return visible;
+        }
+
+        function computeLayout(visibleSet) {
+            const rowHeight = 240;
+            const columnWidth = 220;
+            const positions = new Map();
+            const nodesByGeneration = new Map();
+
+            state.members.forEach(member => {
+                if (!visibleSet.has(member.id)) {
+                    return;
+                }
+
+                const generation = member.generation ?? 0;
+                const list = nodesByGeneration.get(generation) || [];
+                list.push(member);
+                nodesByGeneration.set(generation, list);
+            });
+
+            const generations = Array.from(nodesByGeneration.keys()).sort((a, b) => a - b);
+            const childrenByParent = new Map();
+
+            generations.forEach(generation => {
+                const membersInGeneration = (nodesByGeneration.get(generation) || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+                membersInGeneration.forEach(member => {
+                    const parentIds = Array.isArray(member.parentIds) ? member.parentIds : [];
+                    parentIds.forEach(parentId => {
+                        if (!childrenByParent.has(parentId)) {
+                            childrenByParent.set(parentId, []);
+                        }
+                        childrenByParent.get(parentId).push(member.id);
+                    });
+                });
+            });
+
+            generations.forEach(generation => {
+                const membersInGeneration = (nodesByGeneration.get(generation) || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+                membersInGeneration.forEach((member, index) => {
+                    let x = 140 + (index * columnWidth);
+                    let y = 120 + (generation * rowHeight);
+
+                    if ((member.parentIds || []).length > 0) {
+                        const parentPositions = (member.parentIds || [])
+                            .map(parentId => positions.get(parentId))
+                            .filter(Boolean);
+
+                        if (parentPositions.length > 0) {
+                            const averageX = parentPositions.reduce((sum, position) => sum + position.x, 0) / parentPositions.length;
+                            const siblingList = (member.parentIds || []).flatMap(parentId => childrenByParent.get(parentId) || []);
+                            const siblingIndex = siblingList.indexOf(member.id);
+                            const siblings = siblingList.filter(Boolean);
+                            const spread = siblings.length > 1 ? 140 : 0;
+                            const offset = siblings.length > 1 ? (siblingIndex - (siblings.length - 1) / 2) * spread : 0;
+                            x = averageX + offset;
+                        }
+                    }
+
+                    positions.set(member.id, { x, y });
+                });
+            });
+
+            return positions;
+        }
+
+        function updateTransform() {
+            canvas.style.transform = `translate(${state.offsetX}px, ${state.offsetY}px) scale(${state.scale})`;
+        }
+
+        function fitToScreen() {
+            const visibleSet = visibleNodes();
+            const positions = computeLayout(visibleSet);
+            const visibleIds = Array.from(visibleSet);
+            if (visibleIds.length === 0) {
+                return;
+            }
+
+            const xValues = visibleIds.map(id => positions.get(id)?.x ?? 0);
+            const yValues = visibleIds.map(id => positions.get(id)?.y ?? 0);
+            const minX = Math.min(...xValues);
+            const maxX = Math.max(...xValues) + 220;
+            const minY = Math.min(...yValues);
+            const maxY = Math.max(...yValues) + 220;
+            const width = canvas.parentElement?.clientWidth || 1200;
+            const height = canvas.parentElement?.clientHeight || 800;
+            const scaleX = (width - 80) / Math.max(1, maxX - minX);
+            const scaleY = (height - 80) / Math.max(1, maxY - minY);
+            state.scale = Math.max(0.75, Math.min(1.3, Math.min(scaleX, scaleY)));
+            state.offsetX = 40 - minX * state.scale;
+            state.offsetY = 40 - minY * state.scale;
+            updateTransform();
+        }
+
+        function render() {
+            const visibleSet = visibleNodes();
+            const positions = computeLayout(visibleSet);
+            const allIds = Array.from(visibleSet);
+            const width = Math.max(1100, ...allIds.map(id => (positions.get(id)?.x ?? 0) + 260));
+            const height = Math.max(800, ...allIds.map(id => (positions.get(id)?.y ?? 0) + 260));
+            canvas.innerHTML = '';
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            canvas.style.minHeight = `${height}px`;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'family-tree-svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            canvas.appendChild(svg);
+
+            const visibleLinks = state.links.filter(link => visibleSet.has(link.source) && visibleSet.has(link.target));
+            visibleLinks.forEach(link => {
+                const from = positions.get(link.source) || { x: 0, y: 0 };
+                const to = positions.get(link.target) || { x: 0, y: 0 };
+                const isHighlighted = link.source === state.hoveredId || link.target === state.hoveredId || link.source === state.selectedId || link.target === state.selectedId;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const midX = (from.x + to.x) / 2;
+                const midY = (from.y + to.y) / 2;
+                const controlX = midX;
+                const controlY = from.y < to.y ? Math.min(from.y, to.y) + 90 : Math.max(from.y, to.y) - 90;
+                path.setAttribute('d', `M ${from.x + 90} ${from.y + 96} C ${midX} ${controlY} ${midX} ${controlY} ${to.x + 90} ${to.y + 96}`);
+                path.setAttribute('stroke', isHighlighted ? '#2563eb' : 'rgba(148, 163, 184, 0.45)');
+                path.setAttribute('stroke-width', isHighlighted ? '3' : '2');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-dasharray', relationKind(link.type) === 'spouse' ? '8 5' : '0');
+                svg.appendChild(path);
+            });
+
+            allIds.forEach(id => {
+                const node = getNode(id);
+                if (!node) {
+                    return;
+                }
+
+                const position = positions.get(id) || { x: 120, y: 120 };
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'family-tree-node-card';
+                card.dataset.id = id;
+                card.style.left = `${position.x}px`;
+                card.style.top = `${position.y}px`;
+
+                const isSelected = id === state.selectedId;
+                const isHoveredConnected = state.hoveredId && (id === state.hoveredId || (adjacency.get(state.hoveredId) || []).some(link => link.target === id));
+                const isMatch = state.searchTerm && `${node.name} ${node.gender} ${node.relationshipLabel || ''}`.toLowerCase().includes(state.searchTerm.toLowerCase());
+
+                if (isSelected) {
+                    card.classList.add('family-tree-node-card--selected');
+                }
+                if (isHoveredConnected) {
+                    card.classList.add('family-tree-node-card--connected');
+                }
+                if (isMatch) {
+                    card.classList.add('family-tree-node-card--match');
+                }
+
+                const branchLabel = state.collapsedNodes.has(id) ? '+' : '−';
+                card.innerHTML = `
+                    <span class="family-tree-node-toggle" data-action="toggle">${branchLabel}</span>
+                    <div class="family-tree-node-photo-wrap">
+                        <img class="family-tree-node-photo" src="${node.photo}" alt="${escapeHtml(node.name)}" onerror="this.onerror=null; this.src='/images/family/default-avatar.png';" />
+                    </div>
+                    <div class="family-tree-node-body">
+                        <h6>${escapeHtml(node.name)}</h6>
+                        <p>${escapeHtml(node.relationshipLabel || node.gender || 'Member')}</p>
+                        <small>${escapeHtml(node.gender)}</small>
+                    </div>`;
+
+                card.addEventListener('click', event => {
+                    const action = event.target.closest('[data-action="toggle"]');
+                    if (action) {
+                        event.stopPropagation();
+                        if (state.collapsedNodes.has(id)) {
+                            state.collapsedNodes.delete(id);
+                        } else {
+                            state.collapsedNodes.add(id);
+                        }
+                        render();
+                        return;
+                    }
+
+                    state.selectedId = id;
+                    state.hoveredId = null;
+                    render();
+                    window.location.href = node.profileUrl;
+                });
+
+                card.addEventListener('mouseenter', () => {
+                    state.hoveredId = id;
+                    render();
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    state.hoveredId = null;
+                    render();
+                });
+
+                canvas.appendChild(card);
+            });
+
+            updateTransform();
+        }
+
+        function refreshTreeData() {
+            fetch('/FamilyTree/Data')
+                .then(response => response.ok ? response.json() : null)
+                .then(data => {
+                    if (!data) {
+                        return;
+                    }
+
+                    state.members = data.members || [];
+                    state.links = data.links || [];
+                    if (state.selectedId == null && state.members.length > 0) {
+                        state.selectedId = state.members[0].id;
+                    }
+                    buildAdjacency();
+                    render();
+                })
+                .catch(() => {
+                });
+        }
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            state.scale = Math.min(2.2, state.scale + 0.15);
+            updateTransform();
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            state.scale = Math.max(0.7, state.scale - 0.15);
+            updateTransform();
+        });
+
+        document.getElementById('fitViewBtn').addEventListener('click', fitToScreen);
+
+        document.getElementById('expandAllBtn').addEventListener('click', () => {
+            state.expandedDepth = 8;
+            state.collapsedNodes.clear();
+            render();
+        });
+
+        document.getElementById('collapseAllBtn').addEventListener('click', () => {
+            state.expandedDepth = 1;
+            state.collapsedNodes.clear();
+            render();
+        });
+
+        searchInput.addEventListener('input', event => {
+            state.searchTerm = event.target.value.trim();
+            render();
+        });
+
+        canvas.addEventListener('pointerdown', event => {
+            if (event.target.closest('.family-tree-node-card')) {
+                return;
+            }
+            state.dragActive = true;
+            state.dragStartX = event.clientX - state.offsetX;
+            state.dragStartY = event.clientY - state.offsetY;
+            canvas.setPointerCapture(event.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', event => {
+            if (!state.dragActive) {
+                return;
+            }
+            state.offsetX = event.clientX - state.dragStartX;
+            state.offsetY = event.clientY - state.dragStartY;
+            updateTransform();
+        });
+
+        canvas.addEventListener('pointerup', () => {
+            state.dragActive = false;
+        });
+
+        canvas.addEventListener('pointerleave', () => {
+            state.dragActive = false;
+        });
+
+        searchInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                const match = state.members.find(member => `${member.name} ${member.gender} ${member.relationshipLabel || ''}`.toLowerCase().includes(state.searchTerm.toLowerCase()));
+                if (match) {
+                    state.selectedId = match.id;
+                    render();
+                }
+            }
+        });
+
+        buildAdjacency();
+        render();
+        fitToScreen();
+        setInterval(refreshTreeData, 8000);
     </script>
 }

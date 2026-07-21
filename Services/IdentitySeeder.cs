@@ -40,7 +40,7 @@ public class IdentitySeeder
     private async Task EnsureDefaultAdminAsync()
     {
         const string email = "admin@familyhub.com";
-        const string password = "Admin123!";
+        const string password = "Password123!";
         const string fullName = "System Administrator";
 
         var adminUser = await _userManager.FindByEmailAsync(email);
@@ -76,6 +76,28 @@ public class IdentitySeeder
             {
                 throw new InvalidOperationException(
                     $"Failed to assign Admin role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        // Always ensure the admin password matches the expected value.
+        if (adminUser is not null)
+        {
+            var hasPassword = await _userManager.HasPasswordAsync(adminUser);
+            if (hasPassword)
+            {
+                var removePasswordResult = await _userManager.RemovePasswordAsync(adminUser);
+                if (!removePasswordResult.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to reset admin password: {string.Join(", ", removePasswordResult.Errors.Select(e => e.Description))}");
+                }
+            }
+
+            var addPasswordResult = await _userManager.AddPasswordAsync(adminUser, password);
+            if (!addPasswordResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to set admin password: {string.Join(", ", addPasswordResult.Errors.Select(e => e.Description))}");
             }
         }
     }

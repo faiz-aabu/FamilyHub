@@ -1,7 +1,10 @@
+using System.Security.Claims;
+using FamilyHub.Interfaces;
 using FamilyHub.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FamilyHub.Areas.Identity.Controllers;
 
@@ -10,11 +13,15 @@ public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IActivityLogService _activityLogService;
+    private readonly INotificationService _notificationService;
 
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IActivityLogService activityLogService, INotificationService notificationService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _activityLogService = activityLogService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -40,7 +47,67 @@ public class AccountController : Controller
 
         if (result.Succeeded)
         {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            await _activityLogService.LogAsync(
+                "Login",
+                user is null ? "User signed in successfully." : $"User {user.FullName ?? user.Email} signed in.",
+                "Account",
+                user?.Id,
+                true,
+                "Successful sign-in.");
+
+            if (user is not null)
+            {
+                user.LastLoginAt = DateTimeOffset.UtcNow;
+                await _userManager.UpdateAsync(user);
+
+                try
+                {
+                    await _notificationService.CreateAsync(
+                        user.Id,
+                        "Login successful",
+                        "You signed in successfully to FamilyHub.",
+                        Url.Action("Manage", "Account", new { area = "Identity" }),
+                        "Account",
+                        null,
+                        "Success",
+                        "bi-box-arrow-in-right");
+                }
+                catch
+                {
+                    // Notification delivery errors should not block sign-in.
+                }
+            }
             return RedirectToLocal(returnUrl);
+        }
+
+        var failedUser = await _userManager.FindByEmailAsync(model.Email);
+        await _activityLogService.LogAsync(
+            "Login",
+            failedUser is null ? "Failed login attempt." : $"Failed login attempt for {failedUser.FullName ?? failedUser.Email}.",
+            "Account",
+            failedUser?.Id,
+            false,
+            "Invalid credentials.");
+
+        if (failedUser is not null)
+        {
+            try
+            {
+                await _notificationService.CreateAsync(
+                    failedUser.Id,
+                    "Login failed",
+                    "A sign-in attempt failed. Please verify your credentials and try again.",
+                    Url.Action("Login", "Account", new { area = "Identity" }),
+                    "Account",
+                    null,
+                    "Error",
+                    "bi-shield-lock-fill");
+            }
+            catch
+            {
+                // Notification delivery errors should not block sign-in.
+            }
         }
 
         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
@@ -89,6 +156,30 @@ public class AccountController : Controller
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
+            await _activityLogService.LogAsync(
+                "Create",
+                $"User {user.FullName ?? user.Email} registered a new account.",
+                "Account",
+                user.Id,
+                true,
+                "New account registration completed.");
+
+            try
+            {
+                await _notificationService.CreateForUserAndAdminsAsync(
+                    user.Id,
+                    "Welcome to FamilyHub",
+                    "Your account was created successfully. You can start managing your family records right away.",
+                    Url.Action("Manage", "Account", new { area = "Identity" }),
+                    "Account",
+                    null,
+                    "Success",
+                    "bi-person-check-fill");
+            }
+            catch
+            {
+                // Notification delivery errors should not block registration.
+            }
             return RedirectToLocal(returnUrl);
         }
 
@@ -104,7 +195,15 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout(string? returnUrl = null)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         await _signInManager.SignOutAsync();
+        await _activityLogService.LogAsync(
+            "Logout",
+            "User signed out.",
+            "Account",
+            userId,
+            true,
+            "Successful sign-out.");
         return RedirectToAction(nameof(Login), new { returnUrl });
     }
 
@@ -116,9 +215,298 @@ public class AccountController : Controller
 
     [HttpGet]
     [Authorize]
-    public IActionResult Manage()
+    public async Task<IActionResult> Manage()
     {
-        return View();
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var model = new ManageAccountViewModel
+        {
+            FullName = user.FullName ?? string.Empty,
+            UserName = user.UserName ?? user.Email ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            DarkModePreference = user.DarkModePreference,
+            NotificationPreference = user.NotificationPreference,
+            PreferredLanguage = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "English" : user.PreferredLanguage,
+            ProfilePicturePath = user.ProfilePicturePath,
+            AccountCreatedAt = user.CreatedAt,
+            CurrentRole = roles.FirstOrDefault() ?? "User",
+            EnableTwoFactor = user.TwoFactorEnabled,
+            LastLoginAt = user.LastLoginAt
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> Manage(ManageAccountViewModel model, string actionType)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        model.ActionType = actionType;
+        model.ProfilePicturePath = user.ProfilePicturePath;
+        model.AccountCreatedAt = user.CreatedAt;
+        model.CurrentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
+        model.EnableTwoFactor = user.TwoFactorEnabled;
+        model.LastLoginAt = user.LastLoginAt;
+
+        if (actionType == "profile")
+        {
+            if (string.IsNullOrWhiteSpace(model.FullName))
+            {
+                ModelState.AddModelError(nameof(model.FullName), "Please enter your full name.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.UserName))
+            {
+                ModelState.AddModelError(nameof(model.UserName), "Please enter a username.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Email) && !string.Equals(model.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUser is not null && existingUser.Id != user.Id)
+                {
+                    ModelState.AddModelError(nameof(model.Email), "That email address is already in use.");
+                }
+            }
+
+            var existingUsername = await _userManager.FindByNameAsync(model.UserName.Trim());
+            if (existingUsername is not null && existingUsername.Id != user.Id)
+            {
+                ModelState.AddModelError(nameof(model.UserName), "That username is already taken.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            user.FullName = model.FullName.Trim();
+            user.PhoneNumber = string.IsNullOrWhiteSpace(model.PhoneNumber) ? null : model.PhoneNumber.Trim();
+            user.DarkModePreference = model.DarkModePreference;
+            user.NotificationPreference = model.NotificationPreference;
+            user.PreferredLanguage = string.IsNullOrWhiteSpace(model.PreferredLanguage) ? "English" : model.PreferredLanguage.Trim();
+
+            var emailChanged = !string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase);
+            if (emailChanged)
+            {
+                if (string.IsNullOrWhiteSpace(model.CurrentPassword))
+                {
+                    ModelState.AddModelError(nameof(model.CurrentPassword), "Please enter your current password to change your email.");
+                    return View(model);
+                }
+
+                var passwordCheck = await _userManager.CheckPasswordAsync(user, model.CurrentPassword);
+                if (!passwordCheck)
+                {
+                    ModelState.AddModelError(nameof(model.CurrentPassword), "The current password you entered is incorrect.");
+                    return View(model);
+                }
+
+                var emailToken = await _userManager.GenerateChangeEmailTokenAsync(user, model.Email);
+                var emailResult = await _userManager.ChangeEmailAsync(user, model.Email, emailToken);
+                if (!emailResult.Succeeded)
+                {
+                    foreach (var error in emailResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View(model);
+                }
+            }
+
+            user.Email = model.Email.Trim();
+            user.UserName = model.UserName.Trim();
+            var profileUpdated = await _userManager.UpdateAsync(user);
+            if (!profileUpdated.Succeeded)
+            {
+                foreach (var error in profileUpdated.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Your profile information was updated successfully.";
+            await _activityLogService.LogAsync("Profile Updated", $"Updated account profile for {user.FullName ?? user.Email}.", "Account", user.Id, true, "Profile updated.");
+
+            try
+            {
+                await _notificationService.CreateAsync(
+                    user.Id,
+                    "Profile updated",
+                    "Your profile details were updated successfully.",
+                    Url.Action(nameof(Manage), "Account", new { area = "Identity" }),
+                    "Account",
+                    null,
+                    "Information",
+                    "bi-person-lines-fill");
+            }
+            catch
+            {
+                // Notification delivery errors should not block profile updates.
+            }
+            return RedirectToAction(nameof(Manage));
+        }
+
+        if (actionType == "password")
+        {
+            if (string.IsNullOrWhiteSpace(model.CurrentPassword))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Please enter your current password.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                ModelState.AddModelError(nameof(model.NewPassword), "Please enter a new password.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.ConfirmPassword))
+            {
+                ModelState.AddModelError(nameof(model.ConfirmPassword), "Please confirm your new password.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var passwordCheck = await _userManager.CheckPasswordAsync(user, model.CurrentPassword!);
+            if (!passwordCheck)
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "The current password you entered is incorrect.");
+                return View(model);
+            }
+
+            var passwordResult = await _userManager.ChangePasswordAsync(user, model.CurrentPassword!, model.NewPassword!);
+            if (!passwordResult.Succeeded)
+            {
+                foreach (var error in passwordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["SuccessMessage"] = "Your password was changed successfully.";
+            await _activityLogService.LogAsync("Update", $"Changed password for {user.FullName ?? user.Email}.", "Account", user.Id, true, "Password updated.");
+
+            try
+            {
+                await _notificationService.CreateAsync(
+                    user.Id,
+                    "Password updated",
+                    "Your password was changed successfully.",
+                    Url.Action(nameof(Manage), "Account", new { area = "Identity" }),
+                    "Account",
+                    null,
+                    "Success",
+                    "bi-key-fill");
+            }
+            catch
+            {
+                // Notification delivery errors should not block password changes.
+            }
+            return RedirectToAction(nameof(Manage));
+        }
+
+        if (actionType == "picture")
+        {
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profiles");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var existingPath = user.ProfilePicturePath;
+            if (model.ProfilePictureFile is not null && model.ProfilePictureFile.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid():N}{Path.GetExtension(model.ProfilePictureFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfilePictureFile.CopyToAsync(stream);
+                }
+
+                user.ProfilePicturePath = "/images/profiles/" + fileName;
+                await _userManager.UpdateAsync(user);
+                TempData["SuccessMessage"] = "Your profile picture was updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Please choose an image file to upload.";
+            }
+
+            return RedirectToAction(nameof(Manage));
+        }
+
+        if (actionType == "remove-picture")
+        {
+            user.ProfilePicturePath = null;
+            await _userManager.UpdateAsync(user);
+            TempData["SuccessMessage"] = "Your profile picture was removed.";
+            return RedirectToAction(nameof(Manage));
+        }
+
+        if (actionType == "2fa")
+        {
+            user.TwoFactorEnabled = model.EnableTwoFactor;
+            await _userManager.UpdateAsync(user);
+            TempData["SuccessMessage"] = model.EnableTwoFactor ? "Two-factor authentication is now enabled for your account." : "Two-factor authentication was disabled.";
+
+            try
+            {
+                await _notificationService.CreateAsync(
+                    user.Id,
+                    "Security updated",
+                    model.EnableTwoFactor ? "Two-factor authentication was enabled for your account." : "Two-factor authentication was disabled for your account.",
+                    Url.Action(nameof(Manage), "Account", new { area = "Identity" }),
+                    "Account",
+                    null,
+                    "Information",
+                    "bi-shield-check");
+            }
+            catch
+            {
+                // Notification delivery errors should not block security updates.
+            }
+            return RedirectToAction(nameof(Manage));
+        }
+
+        if (actionType == "delete")
+        {
+            if (!model.ConfirmDelete)
+            {
+                TempData["ErrorMessage"] = "Please confirm account deletion before continuing.";
+                return RedirectToAction(nameof(Manage));
+            }
+
+            var deleteResult = await _userManager.DeleteAsync(user);
+            if (!deleteResult.Succeeded)
+            {
+                foreach (var error in deleteResult.Errors)
+                {
+                    TempData["ErrorMessage"] = error.Description;
+                }
+                return RedirectToAction(nameof(Manage));
+            }
+
+            await _signInManager.SignOutAsync();
+            TempData["SuccessMessage"] = "Your account was deleted successfully.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        return RedirectToAction(nameof(Manage));
     }
 
     private IActionResult RedirectToLocal(string? returnUrl)

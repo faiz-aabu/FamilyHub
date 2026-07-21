@@ -1,229 +1,563 @@
 ﻿@model FamilyHub.Models.DashboardViewModel
 
 @{
-    // This page title appears in the browser tab and in the layout.
     ViewData["Title"] = "Dashboard";
 }
 
-<section class="hero-card text-white p-5 rounded-4 shadow-lg">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-8">
-            <p class="text-uppercase small fw-bold mb-3 text-info">Welcome to FamilyHub</p>
-            <h1 class="display-4 fw-bold mb-3">Manage and organize your family information easily.</h1>
-            <p class="lead mb-4">FamilyHub gives you a calm and simple place to keep family notes, relationships, and important dates in one location.</p>
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-light btn-lg px-4 rounded-pill" asp-controller="FamilyMembers" asp-action="Create">➕ Add Family Member</a>
-                <a class="btn btn-outline-light btn-lg px-4 rounded-pill" asp-controller="FamilyMembers" asp-action="Index">👥 View Members</a>
-            </div>
-        </div>
-        <div class="col-lg-4 text-center">
-            <div class="hero-badge p-4 rounded-circle shadow">
-                <span class="display-1 fw-bold">👨‍👩‍👧‍👦</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="row mt-4 g-4">
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="dashboard-shell">
+    <div class="row g-4">
+        <aside class="col-lg-3">
+            <div class="dashboard-sidebar rounded-4 shadow-sm border p-4 p-lg-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="dashboard-brand-mark">F</div>
                     <div>
-                        <h3 class="h6 fw-bold mb-1">Total Members</h3>
-                        <p class="text-muted mb-0">All family records</p>
+                        <h2 class="h5 fw-bold mb-1">FamilyHub</h2>
+                        <p class="text-muted small mb-0">Admin workspace</p>
                     </div>
-                    <span class="display-6">👨‍👩‍👧‍👦</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.TotalFamilyMembers</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Male Members</h3>
-                        <p class="text-muted mb-0">Registered males</p>
-                    </div>
-                    <span class="display-6">👨</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.TotalMales</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Female Members</h3>
-                        <p class="text-muted mb-0">Registered females</p>
-                    </div>
-                    <span class="display-6">👩</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.TotalFemales</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Married</h3>
-                        <p class="text-muted mb-0">Marital count</p>
-                    </div>
-                    <span class="display-6">💍</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.MarriedMembers</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Registered Users</h3>
-                        <p class="text-muted mb-0">All Identity accounts</p>
-                    </div>
-                    <span class="display-6">🔐</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.TotalRegisteredUsers</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Average Age</h3>
-                        <p class="text-muted mb-0">Based on DOB</p>
-                    </div>
-                    <span class="display-6">📈</span>
-                </div>
-                <div class="display-6 fw-bold">@Model.AverageAge.ToString("0")</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h3 class="h6 fw-bold mb-1">Youngest / Oldest</h3>
-                        <p class="text-muted mb-0">Birth records</p>
-                    </div>
-                    <span class="display-6">🎂</span>
-                </div>
-                <div class="small fw-semibold">Youngest: @Model.YoungestMember</div>
-                <div class="small fw-semibold mt-1">Oldest: @Model.OldestMember</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="row mt-4 g-4">
-    <div class="col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h3 class="h5 fw-bold mb-1">🎂 Upcoming Birthdays</h3>
-                        <p class="text-muted mb-0">The next 30 days</p>
-                    </div>
-                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">View all</a>
                 </div>
 
-                @if (Model.UpcomingBirthdays.Any())
-                {
-                    <div class="d-grid gap-3">
-                        @foreach (var birthday in Model.UpcomingBirthdays)
-                        {
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-4 border">
-                                <img src="@(string.IsNullOrWhiteSpace(birthday.ImagePath) ? "/images/family/default-avatar.png" : birthday.ImagePath)"
-                                     alt="@birthday.Name"
-                                     class="rounded-circle"
-                                     style="width:54px;height:54px;object-fit:cover;" />
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">@birthday.Name</div>
-                                    <div class="small text-muted">@birthday.Birthday.ToString("dd MMM yyyy")</div>
+                <div class="mb-4">
+                    <div class="input-group input-group-sm rounded-pill overflow-hidden border">
+                        <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                        <input id="dashboardSearchInput" class="form-control border-0" type="text" placeholder="Search members, relationships, users" value="@Model.SearchTerm" />
+                    </div>
+                </div>
+
+                <div class="list-group border-0">
+                    <a class="list-group-item dashboard-sidebar-link active" asp-controller="Home" asp-action="Dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a class="list-group-item dashboard-sidebar-link" asp-controller="FamilyMembers" asp-action="Index"><i class="bi bi-people me-2"></i>Family Members</a>
+                    <a class="list-group-item dashboard-sidebar-link" asp-controller="FamilyRelationships" asp-action="Index"><i class="bi bi-diagram-3 me-2"></i>Relationships</a>
+                    <a class="list-group-item dashboard-sidebar-link" asp-controller="FamilyTree" asp-action="Index"><i class="bi bi-tree me-2"></i>Family Tree</a>
+                    <a class="list-group-item dashboard-sidebar-link" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line me-2"></i>Reports</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="list-group-item dashboard-sidebar-link" asp-controller="Users" asp-action="Index"><i class="bi bi-person-gear me-2"></i>Manage Users</a>
+                    }
+                    <a class="list-group-item dashboard-sidebar-link" asp-area="Identity" asp-controller="Account" asp-action="Manage"><i class="bi bi-sliders2 me-2"></i>Settings</a>
+                </div>
+            </div>
+        </aside>
+
+        <div class="col-lg-9">
+            <section class="dashboard-hero rounded-4 p-4 p-lg-5 shadow-sm mb-3">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <p class="text-uppercase small fw-semibold mb-2 text-info-emphasis">Operations Center</p>
+                        <h1 class="display-6 fw-bold mb-2">A modern family operations dashboard.</h1>
+                        <p class="text-muted mb-0">Track members, relationships, growth, and important dates from one polished workspace.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="d-flex flex-wrap gap-2 justify-content-lg-end w-100 w-lg-auto">
+                            <a class="btn btn-light rounded-pill px-4 w-100 w-md-auto" asp-controller="FamilyMembers" asp-action="Create"><i class="bi bi-person-plus me-2"></i>Add Family Member</a>
+                            <a class="btn btn-outline-light rounded-pill px-4 w-100 w-md-auto" asp-controller="FamilyRelationships" asp-action="Create"><i class="bi bi-diagram-3 me-2"></i>Add Relationship</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="dashboardSearchResults" class="dashboard-search-results rounded-4 shadow-sm border p-3 mb-3 d-none"></div>
+
+            <section class="row g-4 mb-3">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stats-card stats-card--blue rounded-4 p-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <p class="stats-card__eyebrow">Family Members</p>
+                                <h3 class="stats-card__value">@Model.TotalFamilyMembers</h3>
+                                <p class="stats-card__meta">Total family records</p>
+                            </div>
+                            <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stats-card stats-card--violet rounded-4 p-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <p class="stats-card__eyebrow">Relationships</p>
+                                <h3 class="stats-card__value">@Model.TotalRelationships</h3>
+                                <p class="stats-card__meta">Connected links</p>
+                            </div>
+                            <div class="stats-icon"><i class="bi bi-diagram-3-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stats-card stats-card--green rounded-4 p-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <p class="stats-card__eyebrow">Users</p>
+                                <h3 class="stats-card__value">@Model.TotalRegisteredUsers</h3>
+                                <p class="stats-card__meta">Registered accounts</p>
+                            </div>
+                            <div class="stats-icon"><i class="bi bi-person-badge-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stats-card stats-card--amber rounded-4 p-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <p class="stats-card__eyebrow">Upcoming Birthdays</p>
+                                <h3 class="stats-card__value">@Model.UpcomingBirthdays.Count</h3>
+                                <p class="stats-card__meta">Next 45 days</p>
+                            </div>
+                            <div class="stats-icon"><i class="bi bi-calendar-event-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="row g-4 mb-3">
+                <div class="col-12 col-xl-6">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-primary-subtle text-primary-emphasis"><i class="bi bi-gender-ambiguous"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Population Overview</h3>
+                                        <p class="text-muted mb-0">Male vs female distribution</p>
+                                    </div>
                                 </div>
-                                <div class="text-end">
-                                    <span class="badge bg-dark rounded-pill">@birthday.DaysRemaining day@(birthday.DaysRemaining == 1 ? string.Empty : "s")</span>
+                                <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">Live data</span>
+                            </div>
+                            <div class="chart-shell">
+                                <div class="chart-loading-state"><span class="spinner-border spinner-border-sm text-primary"></span><span>Loading insights…</span></div>
+                                <div class="chart-empty-state d-none"><div class="empty-state"><i class="bi bi-bar-chart"></i><div>No data available yet.</div></div></div>
+                                <canvas id="genderChart" height="220"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-success-subtle text-success-emphasis"><i class="bi bi-globe2"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Members by Nationality</h3>
+                                        <p class="text-muted mb-0">Most represented regions</p>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Updated</span>
+                            </div>
+                            <div class="chart-shell">
+                                <div class="chart-loading-state"><span class="spinner-border spinner-border-sm text-success"></span><span>Loading insights…</span></div>
+                                <div class="chart-empty-state d-none"><div class="empty-state"><i class="bi bi-bar-chart"></i><div>No data available yet.</div></div></div>
+                                <canvas id="nationalityChart" height="220"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-info-subtle text-info-emphasis"><i class="bi bi-geo-alt"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Members by State</h3>
+                                        <p class="text-muted mb-0">Location mix</p>
+                                    </div>
+                                </div>
+                                <span class="badge bg-info-subtle text-info-emphasis rounded-pill">Filtered</span>
+                            </div>
+                            <div class="chart-shell">
+                                <div class="chart-loading-state"><span class="spinner-border spinner-border-sm text-info"></span><span>Loading insights…</span></div>
+                                <div class="chart-empty-state d-none"><div class="empty-state"><i class="bi bi-bar-chart"></i><div>No data available yet.</div></div></div>
+                                <canvas id="stateChart" height="220"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-person-heart"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Members by Age Group</h3>
+                                        <p class="text-muted mb-0">Life stage distribution</p>
+                                    </div>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Insights</span>
+                            </div>
+                            <div class="chart-shell">
+                                <div class="chart-loading-state"><span class="spinner-border spinner-border-sm text-warning"></span><span>Loading insights…</span></div>
+                                <div class="chart-empty-state d-none"><div class="empty-state"><i class="bi bi-bar-chart"></i><div>No data available yet.</div></div></div>
+                                <canvas id="ageChart" height="220"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-indigo-subtle text-indigo-emphasis"><i class="bi bi-diagram-3-fill"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Relationships</h3>
+                                        <p class="text-muted mb-0">Family network composition</p>
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill">Network</span>
+                            </div>
+                            <div class="row g-4 align-items-center">
+                                <div class="col-lg-8">
+                                    <div class="chart-shell">
+                                        <div class="chart-loading-state"><span class="spinner-border spinner-border-sm text-indigo"></span><span>Loading insights…</span></div>
+                                        <div class="chart-empty-state d-none"><div class="empty-state"><i class="bi bi-bar-chart"></i><div>No data available yet.</div></div></div>
+                                        <canvas id="relationshipChart" height="220"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="relationship-panel rounded-4 border p-3 h-100">
+                                        <div class="small fw-semibold text-uppercase text-muted mb-2">Highlights</div>
+                                        <div id="relationshipHighlights" class="d-flex flex-wrap gap-2"></div>
+                                        <div class="mt-3 small text-muted">This panel reflects the same relationship data used in the chart.</div>
+                                    </div>
                                 </div>
                             </div>
-                        }
+                        </div>
                     </div>
-                }
-                else
-                {
-                    <div class="alert alert-light rounded-4 mb-0" role="alert">
-                        No birthdays are coming up in the next 30 days.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h3 class="h5 fw-bold mb-1">🕒 Recent Members</h3>
-                        <p class="text-muted mb-0">Newest family records</p>
-                    </div>
-                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">Browse</a>
                 </div>
+            </section>
 
-                @if (Model.RecentMembers.Any())
-                {
-                    <div class="d-grid gap-3">
-                        @foreach (var member in Model.RecentMembers)
-                        {
-                            <a asp-controller="FamilyMembers" asp-action="Details" asp-route-id="@member.Id" class="text-decoration-none text-dark">
-                                <div class="d-flex align-items-center gap-3 p-3 rounded-4 border hover-card">
-                                    <img src="@(string.IsNullOrWhiteSpace(member.ImagePath) ? "/images/family/default-avatar.png" : member.ImagePath)"
-                                         alt="@member.Name"
-                                         class="rounded-circle"
-                                         style="width:54px;height:54px;object-fit:cover;" />
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold">@member.Name</div>
-                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(member.Occupation) ? "No occupation" : member.Occupation)</div>
-                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(member.Relationship) ? "No relationship" : member.Relationship)</div>
+            <section class="row g-4 mb-3">
+                <div class="col-12 col-xl-7">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-primary-subtle text-primary-emphasis"><i class="bi bi-clock-history"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Recent Activity</h3>
+                                        <p class="text-muted mb-0">Latest system events</p>
                                     </div>
-                                    <div class="small text-muted text-end">@member.CreatedAt.ToString("dd MMM")</div>
                                 </div>
-                            </a>
-                        }
+                                <a asp-controller="ActivityLogs" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">View all</a>
+                            </div>
+                            @if (Model.RecentActivities.Any())
+                            {
+                                <div class="d-grid gap-3">
+                                    @foreach (var activity in Model.RecentActivities)
+                                    {
+                                        <div class="dashboard-list-item rounded-4 border p-3">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="activity-icon"><i class="bi @activity.Icon"></i></div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">@activity.Title</div>
+                                                    <div class="small text-muted">@activity.Detail</div>
+                                                    <div class="small text-muted mt-1">@activity.UserName · @activity.Timestamp.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-light rounded-4 mb-0">No recent activity yet.</div>
+                            }
+                        </div>
                     </div>
-                }
-                else
-                {
-                    <div class="alert alert-light rounded-4 mb-0" role="alert">
-                        No members have been added yet. Start by adding your first family member.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="row mt-4 g-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4 text-center">
-                <h3 class="h5 fw-bold mb-3">Quick Actions</h3>
-                <div class="d-flex flex-wrap justify-content-center gap-2">
-                    <a asp-controller="FamilyMembers" asp-action="Create" class="btn btn-dark rounded-pill px-4">➕ Add Family Member</a>
-                    <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">👥 View Members</a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4">🎂 Upcoming Birthdays</a>
                 </div>
-            </div>
+                <div class="col-12 col-xl-5">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-bell"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Recent Notifications</h3>
+                                        <p class="text-muted mb-0">Five most recent updates</p>
+                                    </div>
+                                </div>
+                                <a asp-controller="Notifications" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">Open inbox</a>
+                            </div>
+                            @if (Model.RecentNotifications.Any())
+                            {
+                                <div class="d-grid gap-3">
+                                    @foreach (var notification in Model.RecentNotifications)
+                                    {
+                                        <div class="dashboard-list-item rounded-4 border p-3">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="notification-icon"><i class="bi @notification.Icon"></i></div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">@notification.Title</div>
+                                                    <div class="small text-muted">@notification.Message</div>
+                                                    <div class="small text-muted mt-1">@notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-light rounded-4 mb-0">No notifications yet.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="row g-4 mb-0">
+                <div class="col-12 col-xl-7">
+                    <div class="card border-0 shadow-sm rounded-4 dashboard-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="dashboard-section-title">
+                                    <span class="dashboard-section-icon bg-danger-subtle text-danger-emphasis"><i class="bi bi-cake2"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Upcoming Birthdays</h3>
+                                        <p class="text-muted mb-0">Important dates ahead</p>
+                                    </div>
+                                </div>
+                                <a asp-controller="FamilyMembers" asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">Open list</a>
+                            </div>
+                            @if (Model.UpcomingBirthdays.Any())
+                            {
+                                <div class="d-grid gap-3">
+                                    @foreach (var birthday in Model.UpcomingBirthdays)
+                                    {
+                                        <div class="dashboard-list-item rounded-4 border p-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="@(string.IsNullOrWhiteSpace(birthday.ImagePath) ? "/images/family/default-avatar.png" : birthday.ImagePath)" alt="@birthday.Name" class="rounded-circle dashboard-list-avatar" loading="lazy" decoding="async" />
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">@birthday.Name</div>
+                                                    <div class="small text-muted">Birthday: @birthday.Birthday.ToString("dd MMM yyyy")</div>
+                                                    <div class="small text-muted">Turning @birthday.AgeTurning · @birthday.DaysRemaining day@(birthday.DaysRemaining == 1 ? string.Empty : "s") left</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-light rounded-4 mb-0">No birthdays are upcoming.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card border-0 shadow-sm rounded-4 mb-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h3 class="h5 fw-bold mb-1">Quick Actions</h3>
+                            <p class="text-muted mb-0">Common operations</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a class="quick-action-card rounded-4 p-4 text-decoration-none h-100" asp-controller="FamilyMembers" asp-action="Create">
+                                <i class="bi bi-person-plus-fill"></i>
+                                <div class="fw-semibold mt-3">Add Family Member</div>
+                                <div class="small text-muted">Create a new record</div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a class="quick-action-card rounded-4 p-4 text-decoration-none h-100" asp-controller="FamilyRelationships" asp-action="Create">
+                                <i class="bi bi-diagram-3-fill"></i>
+                                <div class="fw-semibold mt-3">Add Relationship</div>
+                                <div class="small text-muted">Link family members</div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a class="quick-action-card rounded-4 p-4 text-decoration-none h-100" asp-controller="FamilyTree" asp-action="Index">
+                                <i class="bi bi-tree-fill"></i>
+                                <div class="fw-semibold mt-3">Open Family Tree</div>
+                                <div class="small text-muted">Explore the network</div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a class="quick-action-card rounded-4 p-4 text-decoration-none h-100" asp-controller="Users" asp-action="Index">
+                                <i class="bi bi-person-gear"></i>
+                                <div class="fw-semibold mt-3">Manage Users</div>
+                                <div class="small text-muted">Admin controls</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
-</section>
+</div>
+
+@section Scripts {
+    <script>
+        const genderChartData = @Html.Raw(Model.GenderChartDataJson);
+        const nationalityChartData = @Html.Raw(Model.NationalityChartDataJson);
+        const stateChartData = @Html.Raw(Model.StateChartDataJson);
+        const ageChartData = @Html.Raw(Model.AgeGroupChartDataJson);
+        const relationshipChartData = @Html.Raw(Model.RelationshipChartDataJson);
+
+        function loadChartJs(callback) {
+            if (window.Chart) {
+                callback();
+                return;
+            }
+
+            const existingScript = document.querySelector('script[data-chartjs]');
+            if (existingScript) {
+                existingScript.addEventListener('load', callback, { once: true });
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+            script.async = true;
+            script.dataset.chartjs = 'true';
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+
+        function normalizeChartData(rawData) {
+            if (!Array.isArray(rawData)) {
+                return [];
+            }
+
+            return rawData
+                .map(item => ({
+                    label: (item?.label ?? item?.Label ?? 'Unknown').toString().trim() || 'Unknown',
+                    count: Number(item?.count ?? item?.Count ?? 0)
+                }))
+                .filter(item => item.count > 0 && item.label !== 'Unknown');
+        }
+
+        function buildChart(elementId, legendLabel, type, rawData, palettes) {
+            const ctx = document.getElementById(elementId);
+            if (!ctx || typeof Chart === 'undefined') {
+                return;
+            }
+
+            const shell = ctx.closest('.chart-shell');
+            const loadingState = shell?.querySelector('.chart-loading-state');
+            const emptyState = shell?.querySelector('.chart-empty-state');
+            const chartData = normalizeChartData(rawData);
+            const labels = chartData.map(item => item.label);
+            const values = chartData.map(item => item.count);
+            const hasData = labels.length > 0 && values.some(value => Number(value) > 0);
+
+            if (!hasData) {
+                loadingState?.classList.add('d-none');
+                emptyState?.classList.remove('d-none');
+                return;
+            }
+
+            loadingState?.classList.add('d-none');
+            emptyState?.classList.add('d-none');
+
+            const backgroundColors = labels.map((_, index) => palettes[index % palettes.length].background);
+            const borderColors = labels.map((_, index) => palettes[index % palettes.length].border);
+
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: legendLabel,
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 250 },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#475569',
+                                padding: 12,
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: { enabled: true }
+                    },
+                    scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { precision: 0 } } } : {}
+                }
+            });
+        }
+
+        loadChartJs(() => {
+            buildChart('genderChart', 'Population', 'doughnut', genderChartData, [
+                { background: '#2563eb', border: '#1d4ed8' },
+                { background: '#8b5cf6', border: '#7c3aed' }
+            ]);
+            buildChart('nationalityChart', 'Members', 'bar', nationalityChartData, [
+                { background: '#10b981', border: '#059669' }
+            ]);
+            buildChart('stateChart', 'Members', 'bar', stateChartData, [
+                { background: '#0ea5e9', border: '#0284c7' }
+            ]);
+            buildChart('ageChart', 'Members', 'bar', ageChartData, [
+                { background: '#f59e0b', border: '#d97706' }
+            ]);
+            buildChart('relationshipChart', 'Relationships', 'polarArea', relationshipChartData, [
+                { background: '#64748b', border: '#334155' },
+                { background: '#3b82f6', border: '#2563eb' },
+                { background: '#a78bfa', border: '#8b5cf6' },
+                { background: '#f472b6', border: '#db2777' },
+                { background: '#f59e0b', border: '#d97706' },
+                { background: '#34d399', border: '#10b981' }
+            ]);
+        });
+
+        const relationshipHighlights = document.getElementById('relationshipHighlights');
+        if (relationshipHighlights) {
+            const relationshipHighlightsData = normalizeChartData(relationshipChartData);
+            relationshipHighlights.innerHTML = relationshipHighlightsData
+                .map(item => `<span class="relationship-chip">${item.label} · ${item.count}</span>`)
+                .join('');
+        }
+
+        const searchInput = document.getElementById('dashboardSearchInput');
+        const searchResults = document.getElementById('dashboardSearchResults');
+        const results = @Html.Raw(Json.Serialize(Model.SearchResults));
+
+        function renderSearchResults() {
+            const term = (searchInput?.value || '').trim().toLowerCase();
+            if (!term) {
+                searchResults.classList.add('d-none');
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            const matches = results.filter(item => `${item.title} ${item.subtitle}`.toLowerCase().includes(term));
+            if (!matches.length) {
+                searchResults.classList.remove('d-none');
+                searchResults.innerHTML = '<div class="text-muted">No matches found.</div>';
+                return;
+            }
+
+            searchResults.classList.remove('d-none');
+            searchResults.innerHTML = matches.map(item => `
+                <a class="d-flex align-items-center justify-content-between gap-3 text-decoration-none text-dark rounded-3 p-2" href="${item.url || '#'}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dashboard-result-badge"><i class="bi bi-search"></i></div>
+                        <div>
+                            <div class="fw-semibold">${item.title}</div>
+                            <div class="small text-muted">${item.section} · ${item.subtitle}</div>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+            `).join('');
+        }
+
+        searchInput?.addEventListener('input', renderSearchResults);
+        renderSearchResults();
+    </script>
+}

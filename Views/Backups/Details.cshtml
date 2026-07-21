@@ -1,0 +1,48 @@
+@model FamilyHub.Models.BackupDetailViewModel
+
+@{
+    ViewData["Title"] = "Backup Details";
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Backup Details</h1>
+                <p class="text-muted mb-0">Review the metadata for the selected backup file.</p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Back</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <div class="border rounded-4 p-4 h-100">
+                    <p class="text-muted small mb-2">Backup Name</p>
+                    <h2 class="h5 fw-bold">@Model.DisplayName</h2>
+                    <p class="text-muted small mt-3 mb-1">File</p>
+                    <p class="mb-0">@Model.FileName</p>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="border rounded-4 p-4 h-100">
+                    <p class="text-muted small mb-2">Created</p>
+                    <p class="fw-semibold mb-3">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                    <p class="text-muted small mb-2">Created By</p>
+                    <p class="fw-semibold mb-3">@Model.CreatedBy</p>
+                    <p class="text-muted small mb-2">Size</p>
+                    <p class="fw-semibold mb-3">@Model.SizeDisplay</p>
+                    <p class="text-muted small mb-2">Status</p>
+                    <span class="badge rounded-pill bg-success-subtle text-success">@Model.Status</span>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <div class="border rounded-4 p-4 mt-4">
+                <h3 class="h6 fw-bold">Notes</h3>
+                <p class="mb-0 text-muted">@Model.Notes</p>
+            </div>
+        }
+    </div>
+</div>

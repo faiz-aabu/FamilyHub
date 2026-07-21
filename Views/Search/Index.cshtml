@@ -1,12 +1,311 @@
+@model FamilyHub.Models.SearchViewModel
+
 @{
-    ViewData["Title"] = "Search";
+    ViewData["Title"] = "Advanced Search";
 }
 
-<div class="card shadow-sm border-0 rounded-4 p-4">
-    <h1 class="h3 fw-bold">Search</h1>
-    <p class="text-muted">This page is ready for future search features.</p>
-    <div class="input-group mt-3">
-        <input class="form-control" type="text" placeholder="Search family members" />
-        <button class="btn btn-dark" type="button">Search</button>
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Advanced Search</h1>
+                <p class="text-muted mb-0">Search people, relationships, users, notifications, audit events, and reports from one place.</p>
+            </div>
+            <a class="btn btn-outline-secondary rounded-pill" asp-controller="Home" asp-action="Dashboard"><i class="bi bi-arrow-left me-2"></i>Back to dashboard</a>
+        </div>
+
+        <form method="get" class="row g-3 align-items-end mb-4">
+            <div class="col-12 col-lg-8">
+                <label class="form-label small fw-semibold text-muted">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="query" value="@Model.Query" placeholder="Search by first name, email, phone, occupation, address, relationship, notes..." />
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-search me-2"></i>Search</button>
+                </div>
+                <div class="mt-2 small text-muted">Instant search, smart suggestions, and highlighted matches are built in.</div>
+            </div>
+            <div class="col-12 col-lg-4 text-lg-end">
+                <button class="btn btn-outline-dark rounded-pill" type="submit" name="showFilters" value="true"><i class="bi bi-funnel me-2"></i>Open filters</button>
+                <a class="btn btn-outline-secondary rounded-pill ms-2" asp-action="Index"><i class="bi bi-x-circle me-2"></i>Clear</a>
+            </div>
+        </form>
+
+        @if (Model.ShowFilters || Model.HasQuery)
+        {
+            <form method="get" class="row g-3 border rounded-4 p-3 mb-4 bg-light-subtle">
+                <input type="hidden" name="query" value="@Model.Query" />
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Gender</label>
+                    <select class="form-select" name="gender">
+                        <option value="">Any</option>
+                        @foreach (var gender in Model.AvailableGenders)
+                        {
+                            <option value="@gender" selected="@(Model.Gender == gender)">@gender</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Age range</label>
+                    <div class="input-group">
+                        <input class="form-control" name="minAge" type="number" min="0" value="@Model.MinAge" placeholder="Min" />
+                        <input class="form-control" name="maxAge" type="number" min="0" value="@Model.MaxAge" placeholder="Max" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Nationality</label>
+                    <select class="form-select" name="nationality">
+                        <option value="">Any</option>
+                        @foreach (var nationality in Model.AvailableNationalities)
+                        {
+                            <option value="@nationality" selected="@(Model.Nationality == nationality)">@nationality</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">State</label>
+                    <select class="form-select" name="state">
+                        <option value="">Any</option>
+                        @foreach (var state in Model.AvailableStates)
+                        {
+                            <option value="@state" selected="@(Model.State == state)">@state</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Religion</label>
+                    <input class="form-control" name="religion" value="@Model.Religion" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Occupation</label>
+                    <select class="form-select" name="occupation">
+                        <option value="">Any</option>
+                        @foreach (var occupation in Model.AvailableOccupations)
+                        {
+                            <option value="@occupation" selected="@(Model.Occupation == occupation)">@occupation</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Marital status</label>
+                    <select class="form-select" name="maritalStatus">
+                        <option value="">Any</option>
+                        @foreach (var status in Model.AvailableMaritalStatuses)
+                        {
+                            <option value="@status" selected="@(Model.MaritalStatus == status)">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Relationship type</label>
+                    <select class="form-select" name="relationshipType">
+                        <option value="">Any</option>
+                        @foreach (var type in Model.AvailableRelationshipTypes)
+                        {
+                            <option value="@type" selected="@(Model.RelationshipType == type)">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Family branch</label>
+                    <input class="form-control" name="familyBranch" value="@Model.FamilyBranch" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Created from</label>
+                    <input class="form-control" name="createdFrom" type="date" value="@Model.CreatedFrom?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Created to</label>
+                    <input class="form-control" name="createdTo" type="date" value="@Model.CreatedTo?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Updated from</label>
+                    <input class="form-control" name="updatedFrom" type="date" value="@Model.UpdatedFrom?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted">Updated to</label>
+                    <input class="form-control" name="updatedTo" type="date" value="@Model.UpdatedTo?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-2"></i>Apply filters</button>
+                    <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-counterclockwise me-2"></i>Reset</a>
+                </div>
+            </form>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-warning rounded-4 mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.HasQuery)
+        {
+            <div class="mb-4 text-muted small">@Model.SearchSummary</div>
+        }
+
+        @if (!Model.HasQuery)
+        {
+            <div class="border rounded-4 p-4 bg-light-subtle">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-clock-history text-primary"></i>
+                    <h2 class="h6 fw-bold mb-0">Recent searches</h2>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var item in Model.RecentSearches)
+                    {
+                        <a class="btn btn-outline-secondary btn-sm rounded-pill" asp-action="Index" asp-route-query="@item">@item</a>
+                    }
+                </div>
+                <div class="mt-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-lightbulb text-warning"></i>
+                        <h2 class="h6 fw-bold mb-0">Suggestions</h2>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var suggestion in Model.Suggestions)
+                        {
+                            <a class="btn btn-outline-primary btn-sm rounded-pill" asp-action="Index" asp-route-query="@suggestion">@suggestion</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (!Model.HasResults)
+        {
+            <div class="border rounded-4 p-5 text-center bg-light-subtle">
+                <i class="bi bi-search fs-1 text-muted"></i>
+                <h2 class="h5 fw-bold mt-3">No results found</h2>
+                <p class="text-muted mb-0">Try a broader term, check the spelling, or adjust the filters.</p>
+            </div>
+        }
+        else
+        {
+            <div class="d-grid gap-4">
+                @if (Model.FamilyMembers.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-people-fill me-2 text-primary"></i>Family Members</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.FamilyMembers)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3 d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                            <div class="small text-muted">@Html.Raw(item.HighlightedSubtitle)</div>
+                                            <div class="small text-muted mt-1">@Html.Raw(item.HighlightedDescription)</div>
+                                        </div>
+                                        <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">@item.Badge</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (Model.Relationships.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-diagram-3-fill me-2 text-success"></i>Relationships</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.Relationships)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3">
+                                        <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                        <div class="small text-muted">@Html.Raw(item.HighlightedSubtitle)</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (Model.Users.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-person-badge-fill me-2 text-info"></i>Users</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.Users)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3">
+                                        <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                        <div class="small text-muted">@Html.Raw(item.HighlightedSubtitle)</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (Model.Notifications.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-bell-fill me-2 text-warning"></i>Notifications</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.Notifications)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3">
+                                        <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                        <div class="small text-muted">@Html.Raw(item.HighlightedDescription)</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (Model.AuditLogs.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-journal-text me-2 text-secondary"></i>Audit Logs</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.AuditLogs)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3">
+                                        <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                        <div class="small text-muted">@Html.Raw(item.HighlightedDescription)</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (Model.Reports.Any())
+                {
+                    <section class="border rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h5 fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-danger"></i>Reports</h2>
+                        </div>
+                        <div class="d-grid gap-3">
+                            @foreach (var item in Model.Reports)
+                            {
+                                <a class="text-decoration-none text-dark" href="@item.Url">
+                                    <div class="border rounded-4 p-3">
+                                        <div class="fw-semibold">@Html.Raw(item.HighlightedTitle)</div>
+                                        <div class="small text-muted">@Html.Raw(item.HighlightedSubtitle)</div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+        }
     </div>
 </div>

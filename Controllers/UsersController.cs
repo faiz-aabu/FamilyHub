@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FamilyHub.Interfaces;
 using FamilyHub.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,11 +14,15 @@ public class UsersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly INotificationService _notificationService;
+    private readonly IActivityLogService _activityLogService;
 
-    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, INotificationService notificationService, IActivityLogService activityLogService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _notificationService = notificationService;
+        _activityLogService = activityLogService;
     }
 
     public async Task<IActionResult> Index()
@@ -212,6 +217,24 @@ public class UsersController : Controller
         }
 
         TempData["SuccessMessage"] = $"Updated the role for {user.FullName ?? user.Email}.";
+        await _activityLogService.LogAsync("Role Changed", $"Changed the role for {user.FullName ?? user.Email} to {model.SelectedRole}.", "User", user.Id, true, "Role assignment updated.");
+
+        try
+        {
+            await _notificationService.CreateForUserAndAdminsAsync(
+                user.Id,
+                "Role changed",
+                $"Your account role was updated to {model.SelectedRole}.",
+                Url.Action(nameof(Details), "Users", new { id = user.Id }),
+                "User",
+                null,
+                "Information",
+                "bi-person-gear");
+        }
+        catch
+        {
+            // Notification delivery errors should not block role updates.
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -267,6 +290,24 @@ public class UsersController : Controller
 
         TempData["SuccessMessage"] = $"A temporary password was created for {user.FullName ?? user.Email}. The user must change it at the next sign-in.";
         TempData["TemporaryPassword"] = tempPassword;
+        await _activityLogService.LogAsync("Password Reset", $"Reset the password for {user.FullName ?? user.Email}.", "User", user.Id, true, "Temporary password issued.");
+
+        try
+        {
+            await _notificationService.CreateForUserAndAdminsAsync(
+                user.Id,
+                "Password reset",
+                "Your password was reset. Please sign in and change it using the temporary password provided.",
+                Url.Action(nameof(Details), "Users", new { id = user.Id }),
+                "User",
+                null,
+                "Warning",
+                "bi-key-fill");
+        }
+        catch
+        {
+            // Notification delivery errors should not block password resets.
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -372,6 +413,24 @@ public class UsersController : Controller
         }
 
         TempData["SuccessMessage"] = $"Locked the account for {user.FullName ?? user.Email}.";
+        await _activityLogService.LogAsync("Account Locked", $"Locked the account for {user.FullName ?? user.Email}.", "User", user.Id, true, "Account lockout applied.");
+
+        try
+        {
+            await _notificationService.CreateForUserAndAdminsAsync(
+                user.Id,
+                "Account locked",
+                "Your account has been locked. Please contact support for assistance.",
+                Url.Action(nameof(Details), "Users", new { id = user.Id }),
+                "User",
+                null,
+                "Warning",
+                "bi-lock-fill");
+        }
+        catch
+        {
+            // Notification delivery errors should not block account lockouts.
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -417,6 +476,24 @@ public class UsersController : Controller
         }
 
         TempData["SuccessMessage"] = $"Unlocked the account for {user.FullName ?? user.Email}.";
+        await _activityLogService.LogAsync("Account Unlocked", $"Unlocked the account for {user.FullName ?? user.Email}.", "User", user.Id, true, "Account lockout removed.");
+
+        try
+        {
+            await _notificationService.CreateForUserAndAdminsAsync(
+                user.Id,
+                "Account unlocked",
+                "Your account has been unlocked successfully.",
+                Url.Action(nameof(Details), "Users", new { id = user.Id }),
+                "User",
+                null,
+                "Success",
+                "bi-unlock-fill");
+        }
+        catch
+        {
+            // Notification delivery errors should not block account unlocks.
+        }
         return RedirectToAction(nameof(Index));
     }
 

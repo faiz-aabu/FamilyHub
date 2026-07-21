@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FamilyHub.Interfaces;
 using FamilyHub.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -15,16 +16,22 @@ public class FamilyMembersController : Controller
 {
     private readonly IFamilyMemberService _familyMemberService;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IActivityLogService _activityLogService;
+    private readonly INotificationService _notificationService;
+    private readonly IFamilyRelationshipService _relationshipService;
 
     /// <summary>
     /// Creates a new family members controller instance.
     /// </summary>
     /// <param name="familyMemberService">The service that provides family member data.</param>
     /// <param name="webHostEnvironment">The environment used to find the web root path.</param>
-    public FamilyMembersController(IFamilyMemberService familyMemberService, IWebHostEnvironment webHostEnvironment)
+    public FamilyMembersController(IFamilyMemberService familyMemberService, IWebHostEnvironment webHostEnvironment, IActivityLogService activityLogService, INotificationService notificationService, IFamilyRelationshipService relationshipService)
     {
         _familyMemberService = familyMemberService;
         _webHostEnvironment = webHostEnvironment;
+        _activityLogService = activityLogService;
+        _notificationService = notificationService;
+        _relationshipService = relationshipService;
     }
 
     /// <summary>
@@ -100,7 +107,36 @@ public class FamilyMembersController : Controller
             UpdatedAt = DateTime.UtcNow
         };
 
-        await _familyMemberService.CreateAsync(familyMember);
+        var createdMember = await _familyMemberService.CreateAsync(familyMember);
+        await _activityLogService.LogAsync(
+            "Member Created",
+            $"Created family member record for {createdMember.FullName}.",
+            "FamilyMember",
+            createdMember.Id.ToString(),
+            true,
+            "A new family member was added.");
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrWhiteSpace(currentUserId))
+        {
+            try
+            {
+                await _notificationService.CreateForUserAndAdminsAsync(
+                    currentUserId,
+                    "Member added",
+                    $"You added {createdMember.FullName} to the family directory.",
+                    Url.Action(nameof(Details), "FamilyMembers", new { id = createdMember.Id }),
+                    "FamilyMember",
+                    createdMember.Id,
+                    "Success",
+                    "bi-person-plus-fill");
+            }
+            catch
+            {
+                // Notification delivery errors should not block the main family member workflow.
+            }
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -201,6 +237,34 @@ public class FamilyMembersController : Controller
         try
         {
             await _familyMemberService.UpdateAsync(existingFamilyMember);
+            await _activityLogService.LogAsync(
+                "Member Updated",
+                $"Updated family member profile for {existingFamilyMember.FullName}.",
+                "FamilyMember",
+                existingFamilyMember.Id.ToString(),
+                true,
+                "Family member details were changed.");
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(currentUserId))
+            {
+                try
+                {
+                    await _notificationService.CreateForUserAndAdminsAsync(
+                        currentUserId,
+                        "Member updated",
+                        $"You updated the profile for {existingFamilyMember.FullName}.",
+                        Url.Action(nameof(Details), "FamilyMembers", new { id = existingFamilyMember.Id }),
+                        "FamilyMember",
+                        existingFamilyMember.Id,
+                        "Information",
+                        "bi-pencil-square");
+                }
+                catch
+                {
+                    // Notification delivery errors should not block the main family member workflow.
+                }
+            }
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -240,6 +304,10 @@ public class FamilyMembersController : Controller
             return NotFound();
         }
 
+        var (canDelete, message) = await _relationshipService.GetDeleteImpactAsync(familyMember.Id);
+        ViewBag.RelationshipImpact = message;
+        ViewBag.CanDelete = canDelete;
+
         return View(familyMember);
     }
 
@@ -259,6 +327,13 @@ public class FamilyMembersController : Controller
             return NotFound();
         }
 
+        var (canDelete, message) = await _relationshipService.GetDeleteImpactAsync(familyMember.Id);
+        if (!canDelete)
+        {
+            TempData["ErrorMessage"] = message;
+            return RedirectToAction(nameof(Delete), new { id = familyMember.Id });
+        }
+
         try
         {
             // Delete the uploaded profile image when it exists and is not the default avatar.
@@ -275,7 +350,37 @@ public class FamilyMembersController : Controller
                 }
             }
 
+            var memberName = familyMember.FullName;
             await _familyMemberService.DeleteAsync(id);
+            await _activityLogService.LogAsync(
+                "Member Deleted",
+                $"Deleted family member record for {memberName}.",
+                "FamilyMember",
+                familyMember.Id.ToString(),
+                true,
+                "A family member record was removed.");
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(currentUserId))
+            {
+                try
+                {
+                    await _notificationService.CreateForUserAndAdminsAsync(
+                        currentUserId,
+                        "Member deleted",
+                        $"You removed {memberName} from the family directory.",
+                        Url.Action(nameof(Index), "FamilyMembers"),
+                        "FamilyMember",
+                        familyMember.Id,
+                        "Warning",
+                        "bi-person-dash-fill");
+                }
+                catch
+                {
+                    // Notification delivery errors should not block the main family member workflow.
+                }
+            }
+
             TempData["SuccessMessage"] = "Family member deleted successfully.";
             return RedirectToAction(nameof(Index));
         }

@@ -7,6 +7,10 @@ public class FamilyTreeViewModel
     public IReadOnlyList<FamilyMember> Members { get; set; } = Array.Empty<FamilyMember>();
 
     public IReadOnlyList<FamilyTreeLinkViewModel> Links { get; set; } = Array.Empty<FamilyTreeLinkViewModel>();
+
+    public string MembersJson { get; set; } = "[]";
+
+    public string LinksJson { get; set; } = "[]";
 }
 
 public class FamilyTreeLinkViewModel

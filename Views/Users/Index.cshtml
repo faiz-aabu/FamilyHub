@@ -4,28 +4,29 @@
     ViewData["Title"] = "Users";
 }
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
             <div>
                 <h1 class="h3 fw-bold mb-1">User Management</h1>
-                <p class="text-muted mb-0">A complete administration panel for FamilyHub users.</p>
+                <p class="text-muted mb-0">A polished administration panel for FamilyHub users and access control.</p>
             </div>
+            <div class="badge bg-dark rounded-pill px-3 py-2">@Model.Users.Count users</div>
         </div>
 
         @if (TempData["SuccessMessage"] is string successMessage)
         {
-            <div class="alert alert-success" role="alert">@successMessage</div>
+            <div class="alert alert-success rounded-4" role="alert">@successMessage</div>
         }
 
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
-            <div class="alert alert-danger" role="alert">@errorMessage</div>
+            <div class="alert alert-danger rounded-4" role="alert">@errorMessage</div>
         }
 
         @if (TempData["TemporaryPassword"] is string tempPassword)
         {
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning rounded-4" role="alert">
                 Temporary password: <strong>@tempPassword</strong>
             </div>
         }
@@ -34,12 +35,11 @@
             <table class="table table-hover align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Current Role</th>
-                        <th>Account Created</th>
-                        <th>Email Confirmed</th>
-                        <th>Actions</th>
+                        <th>Account</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,45 +47,124 @@
                     {
                         @foreach (var user in Model.Users)
                         {
+                            var deleteModalId = $"deleteModal{user.Id}";
+                            var lockModalId = $"lockModal{user.Id}";
+                            var resetModalId = $"resetModal{user.Id}";
+
                             <tr>
-                                <td>@user.FullName</td>
-                                <td>@user.Email</td>
-                                <td><span class="badge rounded-pill bg-primary">@user.Role</span></td>
-                                <td>@user.CreatedAt</td>
+                                <td>
+                                    <div class="fw-semibold">@user.FullName</div>
+                                    <div class="small text-muted">@user.Email</div>
+                                </td>
+                                <td><span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">@user.Role</span></td>
+                                <td class="text-muted">@user.CreatedAt</td>
                                 <td>
                                     @if (user.EmailConfirmed)
                                     {
-                                        <span class="badge rounded-pill bg-success">Yes</span>
+                                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Confirmed</span>
                                     }
                                     else
                                     {
-                                        <span class="badge rounded-pill bg-secondary">No</span>
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Pending</span>
+                                    }
+
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">Locked</span>
                                     }
                                 </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-outline-secondary">View</a>
-                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary">Edit</a>
-                                        <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-outline-warning">Reset PW</a>
-                                        <a asp-action="ChangeRole" asp-route-id="@user.Id" class="btn btn-outline-info">Role</a>
-                                        <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-outline-danger">Delete</a>
+                                <td class="text-end">
+                                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-toggle="tooltip" title="View profile">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="tooltip" title="Edit account">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="ChangeRole" asp-route-id="@user.Id" class="btn btn-outline-info btn-sm rounded-pill" data-bs-toggle="tooltip" title="Change role">
+                                            <i class="bi bi-person-gear"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#@resetModalId" title="Reset password">
+                                            <i class="bi bi-key"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#@deleteModalId" title="Delete account">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
                                         @if (user.IsLocked)
                                         {
-                                            <a asp-action="Unlock" asp-route-id="@user.Id" class="btn btn-outline-success">Unlock</a>
+                                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#@lockModalId" title="Unlock account">
+                                                <i class="bi bi-unlock"></i>
+                                            </button>
                                         }
                                         else
                                         {
-                                            <a asp-action="Lock" asp-route-id="@user.Id" class="btn btn-outline-warning">Lock</a>
+                                            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#@lockModalId" title="Lock account">
+                                                <i class="bi bi-lock"></i>
+                                            </button>
                                         }
                                     </div>
                                 </td>
                             </tr>
+
+                            <div class="modal fade" id="@resetModalId" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4">
+                                        <div class="modal-header border-0">
+                                            <h5 class="modal-title">Reset password</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            This will create a temporary password for <strong>@user.FullName</strong> and send them to the reset confirmation screen.
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-warning">Continue</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="@deleteModalId" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4">
+                                        <div class="modal-header border-0">
+                                            <h5 class="modal-title">Delete account</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            This action will permanently delete the account for <strong>@user.FullName</strong>.
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger">Continue</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="@lockModalId" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4">
+                                        <div class="modal-header border-0">
+                                            <h5 class="modal-title">@(user.IsLocked ? "Unlock account" : "Lock account")</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            @(user.IsLocked ? $"This will unlock the account for {user.FullName}." : $"This will lock the account for {user.FullName}.")
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <a asp-action="@(user.IsLocked ? "Unlock" : "Lock")" asp-route-id="@user.Id" class="btn btn-warning">Continue</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                            <td colspan="5" class="text-center text-muted py-4">No users found.</td>
                         </tr>
                     }
                 </tbody>
@@ -93,3 +172,11 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+            new bootstrap.Tooltip(element);
+        });
+    </script>
+}

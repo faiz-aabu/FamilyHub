@@ -1,0 +1,31 @@
+@model FamilyHub.Models.ReportsViewModel
+
+@{
+    ViewData["Title"] = "Print Report";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>FamilyHub Report</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="p-4">
+    <h1 class="h3 fw-bold">FamilyHub Report</h1>
+    <p class="text-muted">Printed on @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+    <div class="row g-3">
+        <div class="col-6"><strong>Total Members:</strong> @Model.TotalMembers</div>
+        <div class="col-6"><strong>Male Members:</strong> @Model.MaleMembers</div>
+        <div class="col-6"><strong>Female Members:</strong> @Model.FemaleMembers</div>
+        <div class="col-6"><strong>Children:</strong> @Model.Children</div>
+        <div class="col-6"><strong>Adults:</strong> @Model.Adults</div>
+        <div class="col-6"><strong>Seniors:</strong> @Model.Seniors</div>
+        <div class="col-6"><strong>Relationships:</strong> @Model.TotalRelationships</div>
+        <div class="col-6"><strong>Families:</strong> @Model.Families</div>
+        <div class="col-6"><strong>Users:</strong> @Model.Users</div>
+        <div class="col-6"><strong>Administrators:</strong> @Model.Administrators</div>
+    </div>
+</body>
+</html>

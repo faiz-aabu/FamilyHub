@@ -38,7 +38,10 @@ public class FamilyMemberService : IFamilyMemberService
     public IEnumerable<FamilyMember> GetAll()
     {
         return _context.FamilyMembers
+            .AsNoTracking()
             .Include(x => x.RelatedFamilyMember)
+            .Include(x => x.Relationships)
+                .ThenInclude(x => x.RelatedMember)
             .OrderBy(x => x.FirstName)
             .ToList();
     }
@@ -51,7 +54,10 @@ public class FamilyMemberService : IFamilyMemberService
     public async Task<FamilyMember?> GetByIdAsync(int id)
     {
         return await _context.FamilyMembers
+            .AsNoTracking()
             .Include(x => x.RelatedFamilyMember)
+            .Include(x => x.Relationships)
+                .ThenInclude(x => x.RelatedMember)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

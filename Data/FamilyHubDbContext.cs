@@ -30,6 +30,15 @@ public class FamilyHubDbContext : IdentityDbContext<ApplicationUser>
     /// </summary>
     public DbSet<FamilyRelationship> FamilyRelationships => Set<FamilyRelationship>();
 
+    /// <summary>
+    /// Activity log entries table.
+    /// </summary>
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+
+    /// <summary>
+    /// User notifications table.
+    /// </summary>
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     /// <summary>
     /// Configures database relationships and rules.

@@ -6,6 +6,8 @@
         ? "/images/family/default-avatar.png"
         : Model.ImagePath;
     var age = Model.Age.HasValue ? Model.Age.Value.ToString() : "Not available";
+    var relationshipImpact = ViewBag.RelationshipImpact as string;
+    var canDelete = ViewBag.CanDelete as bool? ?? true;
 }
 
 <div class="container py-5">
@@ -28,15 +30,26 @@
                         <p class="text-muted">Nationality: @(string.IsNullOrWhiteSpace(Model.Nationality) ? "Not provided" : Model.Nationality)</p>
                     </div>
 
+                    @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="alert alert-danger rounded-4 border-0" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill me-2"></i>@errorMessage
+                        </div>
+                    }
+
                     <div class="alert alert-warning rounded-4 border-0" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         Are you sure you want to permanently delete this family member?
+                        @if (!string.IsNullOrWhiteSpace(relationshipImpact))
+                        {
+                            <div class="mt-2"><strong>Impact:</strong> @relationshipImpact</div>
+                        }
                     </div>
 
                     <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
                         <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <button type="submit" class="btn btn-danger rounded-pill px-4" @(canDelete ? string.Empty : "disabled")>
                                 <i class="bi bi-trash3-fill me-2"></i>Delete
                             </button>
                         </form>

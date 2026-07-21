@@ -1,0 +1,176 @@
+@model FamilyHub.Models.ActivityLogIndexViewModel
+
+@{
+    ViewData["Title"] = "Audit Logs";
+    var totalPages = Math.Max(1, (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize));
+    var hasPrevious = Model.PageNumber > 1;
+    var hasNext = Model.PageNumber < totalPages;
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Audit Logs</h1>
+                <p class="text-muted mb-0">Review authentication, profile, member, and administrative activity in one place.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <form asp-action="ExportCsv" method="post" class="d-inline">
+                    <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
+                    <input type="hidden" name="actionFilter" value="@Model.ActionFilter" />
+                    <input type="hidden" name="userFilter" value="@Model.UserFilter" />
+                    <input type="hidden" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-outline-primary"><i class="bi bi-filetype-csv me-2"></i>Export CSV</button>
+                </form>
+                <form asp-action="ExportExcel" method="post" class="d-inline">
+                    <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
+                    <input type="hidden" name="actionFilter" value="@Model.ActionFilter" />
+                    <input type="hidden" name="userFilter" value="@Model.UserFilter" />
+                    <input type="hidden" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-2"></i>Export Excel</button>
+                </form>
+                <form asp-action="ExportPdf" method="post" class="d-inline">
+                    <input type="hidden" name="searchTerm" value="@Model.SearchTerm" />
+                    <input type="hidden" name="actionFilter" value="@Model.ActionFilter" />
+                    <input type="hidden" name="userFilter" value="@Model.UserFilter" />
+                    <input type="hidden" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-2"></i>Export PDF</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-3">
+                <div class="border rounded-4 p-3">
+                    <div class="text-muted small">Total Events</div>
+                    <div class="fw-bold fs-4">@Model.Statistics.GetValueOrDefault("Total", 0)</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="border rounded-4 p-3">
+                    <div class="text-muted small">Successful</div>
+                    <div class="fw-bold fs-4">@Model.Statistics.GetValueOrDefault("Success", 0)</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="border rounded-4 p-3">
+                    <div class="text-muted small">Failed</div>
+                    <div class="fw-bold fs-4">@Model.Statistics.GetValueOrDefault("Failed", 0)</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="border rounded-4 p-3">
+                    <div class="text-muted small">Today</div>
+                    <div class="fw-bold fs-4">@Model.Statistics.GetValueOrDefault("Today", 0)</div>
+                </div>
+            </div>
+        </div>
+
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-12 col-md-3">
+                <input class="form-control" name="searchTerm" value="@Model.SearchTerm" placeholder="Search description, user, entity, action" />
+            </div>
+            <div class="col-12 col-md-2">
+                <select class="form-select" name="actionFilter">
+                    <option value="">All actions</option>
+                    @foreach (var action in Model.AvailableActions)
+                    {
+                        <option value="@action" selected="@(Model.ActionFilter == action)">@action</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <select class="form-select" name="userFilter">
+                    <option value="">All users</option>
+                    @foreach (var user in Model.AvailableUsers)
+                    {
+                        <option value="@user" selected="@(Model.UserFilter == user)">@user</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <input class="form-control" name="dateFrom" type="date" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-2">
+                <input class="form-control" name="dateTo" type="date" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-1">
+                <button class="btn btn-primary w-100" type="submit">Filter</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Description</th>
+                        <th>Entity</th>
+                        <th>IP Address</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Logs.Any())
+                    {
+                        <tr><td colspan="8" class="text-center text-muted py-4">No activity logs yet.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in Model.Logs)
+                        {
+                            <tr>
+                                <td>@log.Timestamp.ToLocalTime().ToString("dd MMM yyyy")</td>
+                                <td>@log.Timestamp.ToLocalTime().ToString("HH:mm:ss")</td>
+                                <td>@(string.IsNullOrWhiteSpace(log.UserName) ? "System" : log.UserName)</td>
+                                <td>@log.Action</td>
+                                <td>@log.Description</td>
+                                <td>@(string.IsNullOrWhiteSpace(log.EntityName) ? "—" : log.EntityName)</td>
+                                <td>@(string.IsNullOrWhiteSpace(log.IpAddress) ? "—" : log.IpAddress)</td>
+                                <td>
+                                    @if (log.Success)
+                                    {
+                                        <span class="badge bg-success">Success</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failure</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4" aria-label="Audit log pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(hasPrevious ? "" : "disabled")">
+                        <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-actionFilter="@Model.ActionFilter" asp-route-userFilter="@Model.UserFilter" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" asp-route-pageNumber="@(Model.PageNumber - 1)">Previous</a>
+                    </li>
+                    @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+                    {
+                        <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-actionFilter="@Model.ActionFilter" asp-route-userFilter="@Model.UserFilter" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" asp-route-pageNumber="@pageNumber">@pageNumber</a>
+                        </li>
+                    }
+                    <li class="page-item @(hasNext ? "" : "disabled")">
+                        <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-actionFilter="@Model.ActionFilter" asp-route-userFilter="@Model.UserFilter" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" asp-route-pageNumber="@(Model.PageNumber + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

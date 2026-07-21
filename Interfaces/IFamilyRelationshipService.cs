@@ -41,4 +41,9 @@ public interface IFamilyRelationshipService
     /// Returns all relationships that belong to a specific family member.
     /// </summary>
     IEnumerable<FamilyRelationship> GetByMemberId(int memberId);
+
+    /// <summary>
+    /// Checks whether deleting a family member would leave the relationship graph inconsistent.
+    /// </summary>
+    Task<(bool CanDelete, string Message)> GetDeleteImpactAsync(int memberId);
 }

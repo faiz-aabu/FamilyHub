@@ -143,7 +143,9 @@
                                         <div class="text-muted small">Relationship</div>
                                         <div class="fw-semibold">@relationship.RelationshipType</div>
                                         <div class="text-muted small mt-3">Related Member</div>
-                                        <div class="fw-semibold">@relationship.RelatedMember?.FullName</div>
+                                        <a asp-action="Details" asp-route-id="@relationship.RelatedMemberId" class="fw-semibold text-decoration-none text-dark">
+                                            @relationship.RelatedMember?.FullName
+                                        </a>
                                     </div>
                                 </div>
                             }

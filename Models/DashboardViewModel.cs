@@ -1,8 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace FamilyHub.Models;
 
 /// <summary>
 /// Represents the statistics and summary data shown on the dashboard.
-/// This view model keeps the home page simple and beginner friendly.
 /// </summary>
 public class DashboardViewModel
 {
@@ -62,6 +63,56 @@ public class DashboardViewModel
     public int TotalRegisteredUsers { get; set; }
 
     /// <summary>
+    /// Gets or sets the total number of stored relationships.
+    /// </summary>
+    public int TotalRelationships { get; set; }
+
+    /// <summary>
+    /// Gets or sets the dashboard search term.
+    /// </summary>
+    public string SearchTerm { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the search results for the dashboard search box.
+    /// </summary>
+    public IReadOnlyList<DashboardSearchResultViewModel> SearchResults { get; set; } = Array.Empty<DashboardSearchResultViewModel>();
+
+    /// <summary>
+    /// Gets or sets the recent administrative activity entries.
+    /// </summary>
+    public IReadOnlyList<DashboardActivityViewModel> RecentActivities { get; set; } = Array.Empty<DashboardActivityViewModel>();
+
+    /// <summary>
+    /// Gets or sets the most recent notifications for the dashboard.
+    /// </summary>
+    public IReadOnlyList<DashboardNotificationViewModel> RecentNotifications { get; set; } = Array.Empty<DashboardNotificationViewModel>();
+
+    /// <summary>
+    /// Gets or sets the series data for the gender chart.
+    /// </summary>
+    public string GenderChartDataJson { get; set; } = "[]";
+
+    /// <summary>
+    /// Gets or sets the series data for the nationality chart.
+    /// </summary>
+    public string NationalityChartDataJson { get; set; } = "[]";
+
+    /// <summary>
+    /// Gets or sets the series data for the state chart.
+    /// </summary>
+    public string StateChartDataJson { get; set; } = "[]";
+
+    /// <summary>
+    /// Gets or sets the series data for the age group chart.
+    /// </summary>
+    public string AgeGroupChartDataJson { get; set; } = "[]";
+
+    /// <summary>
+    /// Gets or sets the series data for the relationship chart.
+    /// </summary>
+    public string RelationshipChartDataJson { get; set; } = "[]";
+
+    /// <summary>
     /// Gets a value indicating whether any family members exist.
     /// </summary>
     public bool HasMembers => TotalFamilyMembers > 0;
@@ -91,6 +142,11 @@ public class UpcomingBirthdayViewModel
     /// Gets or sets the number of days until the next birthday.
     /// </summary>
     public int DaysRemaining { get; set; }
+
+    /// <summary>
+    /// Gets or sets the age the person will turn on their next birthday.
+    /// </summary>
+    public int AgeTurning { get; set; }
 }
 
 /// <summary>
@@ -127,4 +183,51 @@ public class RecentMemberViewModel
     /// Gets or sets the date when the member was added.
     /// </summary>
     public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Represents one recent activity item shown on the dashboard.
+/// </summary>
+public class DashboardActivityViewModel
+{
+    public string Title { get; set; } = string.Empty;
+
+    public string Detail { get; set; } = string.Empty;
+
+    public string Icon { get; set; } = "bi-journal-text";
+
+    public DateTime Timestamp { get; set; }
+
+    public string? UserName { get; set; }
+}
+
+/// <summary>
+/// Represents a search result entry for the dashboard search box.
+/// </summary>
+public class DashboardSearchResultViewModel
+{
+    public string Section { get; set; } = string.Empty;
+
+    public string Title { get; set; } = string.Empty;
+
+    public string Subtitle { get; set; } = string.Empty;
+
+    public string? Url { get; set; }
+
+    public string? ImagePath { get; set; }
+}
+
+public class ChartDataPoint
+{
+    public ChartDataPoint(string label, int count)
+    {
+        Label = label;
+        Count = count;
+    }
+
+    [JsonPropertyName("label")]
+    public string Label { get; set; }
+
+    [JsonPropertyName("count")]
+    public int Count { get; set; }
 }

@@ -1,0 +1,101 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-familyhub",
+			"type": "shell",
+			"command": "dotnet build",
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://127.0.0.1:5123",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://127.0.0.1:5123",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://127.0.0.1:5123",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://127.0.0.1:5123",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-familyhub-nocopy",
+			"type": "shell",
+			"command": "dotnet build -p:UseAppHost=false --no-restore",
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "kill-dotnet-host",
+			"type": "shell",
+			"command": "taskkill /F /PID 7524",
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://localhost:5288",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "run-familyhub",
+			"type": "shell",
+			"command": "dotnet run --urls http://localhost:5288",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "kill-all-dotnet",
+			"type": "shell",
+			"command": "taskkill /F /IM dotnet.exe",
+			"group": "build"
+		},
+		{
+			"label": "run-on-localhost-5288",
+			"type": "shell",
+			"command": "dotnet run --urls http://localhost:5288",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "kill-familyhub-exe",
+			"type": "shell",
+			"command": "taskkill /F /PID 27784",
+			"group": "build"
+		},
+		{
+			"label": "run-familyhub-5288",
+			"type": "shell",
+			"command": "dotnet run --urls http://localhost:5288",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
