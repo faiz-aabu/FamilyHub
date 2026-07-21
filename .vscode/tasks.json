@@ -96,6 +96,15 @@
 			"command": "dotnet run --urls http://localhost:5288",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "publish-familyhub",
+			"type": "shell",
+			"command": "dotnet publish -c Release -p:UseAppHost=false --no-restore",
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
 		}
 	]
 }

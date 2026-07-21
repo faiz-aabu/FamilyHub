@@ -88,7 +88,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
-    options.HttpOnly = HttpOnlyPolicy.Always;
+    options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
     options.Secure = CookieSecurePolicy.Always;
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
 });
