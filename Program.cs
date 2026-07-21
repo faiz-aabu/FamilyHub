@@ -86,13 +86,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-builder.Services.Configure<CookiePolicyOptions>(options =>
-{
-    options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
-    options.Secure = CookieSecurePolicy.Always;
-    options.MinimumSameSitePolicy = SameSiteMode.Lax;
-});
-
 // Application services
 builder.Services.AddScoped<IFamilyMemberService, FamilyMemberService>();
 builder.Services.AddScoped<IFamilyRelationshipService, FamilyRelationshipService>();
@@ -123,7 +116,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 app.UseHttpsRedirection();
-app.UseCookiePolicy();
 app.UseStaticFiles();
 
 app.Use(async (context, next) =>
