@@ -273,3 +273,4 @@ C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\FamilyHub.genruntimeconfig.
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\FamilyHub.pdb
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\ref\FamilyHub.dll
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\appsettings.Production.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\FamilyHub.exe

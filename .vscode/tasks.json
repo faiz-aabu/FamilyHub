@@ -105,6 +105,12 @@
 				"$msCompile"
 			],
 			"group": "build"
+		},
+		{
+			"label": "docker-build-verify",
+			"type": "shell",
+			"command": "docker build .",
+			"problemMatcher": []
 		}
 	]
 }
