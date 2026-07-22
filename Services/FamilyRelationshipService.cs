@@ -21,6 +21,14 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     }
 
     /// <summary>
+    /// Returns every relationship record from the database.
+    /// </summary>
+    public IEnumerable<FamilyRelationship> GetAll()
+    {
+        return GetAll(null, false);
+    }
+
+    /// <summary>
     /// Returns every relationship including its related navigation data.
     /// </summary>
     public IEnumerable<FamilyRelationship> GetAll(string? userId = null, bool isAdmin = false)
@@ -114,9 +122,17 @@ public class FamilyRelationshipService : IFamilyRelationshipService
             .AsQueryable();
 
         return ApplyUserFilter(query, userId, isAdmin)
-            .OrderBy(relationship => relationship.Member?.FirstName ?? string.Empty)
-            .ThenBy(relationship => relationship.RelatedMember?.FirstName ?? string.Empty)
+            .OrderBy(relationship => relationship.Member != null ? relationship.Member.FirstName : string.Empty)
+            .ThenBy(relationship => relationship.RelatedMember != null ? relationship.RelatedMember.FirstName : string.Empty)
             .ToList();
+    }
+
+    /// <summary>
+    /// Returns all relationships for one family member.
+    /// </summary>
+    public IEnumerable<FamilyRelationship> GetByMemberId(int memberId)
+    {
+        return GetByMemberId(memberId, null, false);
     }
 
     /// <summary>

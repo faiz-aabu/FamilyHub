@@ -122,7 +122,6 @@ public class FamilyMembersController : Controller
             true,
             "A new family member was added.");
 
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrWhiteSpace(currentUserId))
         {
             try
@@ -255,13 +254,13 @@ public class FamilyMembersController : Controller
                 true,
                 "Family member details were changed.");
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrWhiteSpace(currentUserId))
+            var notificationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(notificationUserId))
             {
                 try
                 {
                     await _notificationService.CreateForUserAndAdminsAsync(
-                        currentUserId,
+                        notificationUserId,
                         "Member updated",
                         $"You updated the profile for {existingFamilyMember.FullName}.",
                         Url.Action(nameof(Details), "FamilyMembers", new { id = existingFamilyMember.Id }),
@@ -372,13 +371,13 @@ public class FamilyMembersController : Controller
                 true,
                 "A family member record was removed.");
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrWhiteSpace(currentUserId))
+            var notificationUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(notificationUserId))
             {
                 try
                 {
                     await _notificationService.CreateForUserAndAdminsAsync(
-                        currentUserId,
+                        notificationUserId,
                         "Member deleted",
                         $"You removed {memberName} from the family directory.",
                         Url.Action(nameof(Index), "FamilyMembers"),

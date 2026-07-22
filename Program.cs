@@ -37,7 +37,7 @@ builder.Services.AddResponseCompression(options =>
 builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 
-builder.Services.Configure<FamilyHub.Models.AdminUserSettings>(builder.Configuration.GetSection("AdminUser"));
+builder.Services.Configure<AdminUserSettings>(builder.Configuration.GetSection("AdminUser"));
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
