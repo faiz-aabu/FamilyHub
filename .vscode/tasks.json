@@ -111,6 +111,24 @@
 			"type": "shell",
 			"command": "docker build .",
 			"problemMatcher": []
+		},
+		{
+			"label": "temp-ef-migrations-list",
+			"type": "shell",
+			"command": "dotnet ef migrations list",
+			"problemMatcher": []
+		},
+		{
+			"label": "create-ef-migration-add-familymember-userid",
+			"type": "shell",
+			"command": "dotnet ef migrations add AddFamilyMemberUserId -o Migrations",
+			"problemMatcher": []
+		},
+		{
+			"label": "apply-ef-migrations",
+			"type": "shell",
+			"command": "dotnet ef database update",
+			"problemMatcher": []
 		}
 	]
 }
