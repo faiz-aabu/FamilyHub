@@ -46,6 +46,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("Missing connection string 'DefaultConnection'. Configure it in appsettings.json, appsettings.Production.json, or environment variables.");
 }
 
+connectionString = EnsureSqlServerTrustConnection(connectionString);
+
 builder.Services.AddDbContext<FamilyHubDbContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -92,6 +94,24 @@ builder.Services.AddScoped<IFamilyRelationshipService, FamilyRelationshipService
 builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IBackupService, BackupService>();
+
+static string EnsureSqlServerTrustConnection(string connectionString)
+{
+    var normalized = connectionString.Trim();
+    var lower = normalized.ToLowerInvariant();
+
+    if (!lower.Contains("encrypt="))
+    {
+        normalized += ";Encrypt=True";
+    }
+
+    if (!lower.Contains("trustservercertificate="))
+    {
+        normalized += ";TrustServerCertificate=True";
+    }
+
+    return normalized;
+}
 
 var app = builder.Build();
 
