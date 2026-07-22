@@ -144,7 +144,7 @@ public class AccountController : Controller
 
         if (result.Succeeded)
         {
-            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+            var roleResult = await _userManager.AddToRoleAsync(user, ApplicationRoles.Customer);
             if (!roleResult.Succeeded)
             {
                 foreach (var error in roleResult.Errors)

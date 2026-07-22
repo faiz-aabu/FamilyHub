@@ -65,6 +65,18 @@ public class FamilyMember
     public FamilyMember? RelatedFamilyMember { get; set; }
 
     /// <summary>
+    /// Gets or sets the owner user identifier for this family member record.
+    /// </summary>
+    [Display(Name = "Owner")]
+    public string? UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user who owns this family member record.
+    /// </summary>
+    [ForeignKey(nameof(UserId))]
+    public ApplicationUser? User { get; set; }
+
+    /// <summary>
     /// Gets the full display name for this family member.
     /// </summary>
     [NotMapped]

@@ -22,8 +22,10 @@ public class IdentitySeeder
 
     public async Task SeedAsync()
     {
-        await EnsureRoleAsync("Admin");
-        await EnsureRoleAsync("User");
+        await EnsureRoleAsync(ApplicationRoles.AdminLegacy);
+        await EnsureRoleAsync(ApplicationRoles.Administrator);
+        await EnsureRoleAsync(ApplicationRoles.UserLegacy);
+        await EnsureRoleAsync(ApplicationRoles.Customer);
 
         if (_adminUserSettings.SeedAdmin)
         {
@@ -73,14 +75,25 @@ public class IdentitySeeder
             }
         }
 
-        if (!await _userManager.IsInRoleAsync(adminUser, "Admin"))
+        var adminRoles = new[] { ApplicationRoles.AdminLegacy, ApplicationRoles.Administrator };
+        var missingAdminRoles = new List<string>();
+
+        foreach (var roleName in adminRoles)
         {
-            var roleResult = await _userManager.AddToRoleAsync(adminUser, "Admin");
+            if (!await _userManager.IsInRoleAsync(adminUser, roleName))
+            {
+                missingAdminRoles.Add(roleName);
+            }
+        }
+
+        if (missingAdminRoles.Any())
+        {
+            var roleResult = await _userManager.AddToRolesAsync(adminUser, missingAdminRoles);
 
             if (!roleResult.Succeeded)
             {
                 throw new InvalidOperationException(
-                    $"Failed to assign Admin role: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+                    $"Failed to assign administrator roles: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
             }
         }
 

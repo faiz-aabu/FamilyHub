@@ -23,34 +23,39 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     /// <summary>
     /// Returns every relationship including its related navigation data.
     /// </summary>
-    public IEnumerable<FamilyRelationship> GetAll()
+    public IEnumerable<FamilyRelationship> GetAll(string? userId = null, bool isAdmin = false)
     {
-        return _context.FamilyRelationships
+        var query = _context.FamilyRelationships
             .AsNoTracking()
             .Include(x => x.Member)
             .Include(x => x.RelatedMember)
             .OrderBy(x => x.Member!.FirstName)
             .ThenBy(x => x.RelatedMember!.FirstName)
-            .ToList();
+            .AsQueryable();
+
+        return ApplyUserFilter(query, userId, isAdmin).ToList();
     }
 
     /// <summary>
     /// Finds a relationship by identifier.
     /// </summary>
-    public async Task<FamilyRelationship?> GetByIdAsync(int id)
+    public async Task<FamilyRelationship?> GetByIdAsync(int id, string? userId = null, bool isAdmin = false)
     {
-        return await _context.FamilyRelationships
+        var query = _context.FamilyRelationships
             .AsNoTracking()
             .Include(x => x.Member)
             .Include(x => x.RelatedMember)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .Where(x => x.Id == id);
+
+        return await ApplyUserFilter(query, userId, isAdmin).FirstOrDefaultAsync();
     }
 
     /// <summary>
     /// Creates a new relationship record.
     /// </summary>
-    public async Task<FamilyRelationship> CreateAsync(FamilyRelationship relationship)
+    public async Task<FamilyRelationship> CreateAsync(FamilyRelationship relationship, string? userId = null, bool isAdmin = false)
     {
+        await ValidateRelationshipOwnershipAsync(relationship, userId, isAdmin);
         await ValidateRelationshipAsync(relationship);
         _context.FamilyRelationships.Add(relationship);
         await _context.SaveChangesAsync();
@@ -60,8 +65,9 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     /// <summary>
     /// Updates an existing relationship record.
     /// </summary>
-    public async Task<FamilyRelationship> UpdateAsync(FamilyRelationship relationship)
+    public async Task<FamilyRelationship> UpdateAsync(FamilyRelationship relationship, string? userId = null, bool isAdmin = false)
     {
+        await ValidateRelationshipOwnershipAsync(relationship, userId, isAdmin);
         await ValidateRelationshipAsync(relationship, relationship.Id);
         _context.FamilyRelationships.Update(relationship);
         await _context.SaveChangesAsync();
@@ -71,9 +77,12 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     /// <summary>
     /// Deletes a relationship record.
     /// </summary>
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, string? userId = null, bool isAdmin = false)
     {
-        var relationship = await _context.FamilyRelationships.FindAsync(id);
+        var query = _context.FamilyRelationships.AsQueryable();
+        query = ApplyUserFilter(query, userId, isAdmin);
+
+        var relationship = await query.FirstOrDefaultAsync(x => x.Id == id);
         if (relationship is null)
         {
             return;
@@ -86,16 +95,15 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     /// <summary>
     /// Searches relationships by member name, related member name, or relationship type.
     /// </summary>
-    public IEnumerable<FamilyRelationship> Search(string? searchTerm)
+    public IEnumerable<FamilyRelationship> Search(string? searchTerm, string? userId = null, bool isAdmin = false)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            return GetAll();
+            return GetAll(userId, isAdmin);
         }
 
         var normalizedTerm = searchTerm.Trim();
-
-        return _context.FamilyRelationships
+        var query = _context.FamilyRelationships
             .AsNoTracking()
             .Include(x => x.Member)
             .Include(x => x.RelatedMember)
@@ -103,7 +111,9 @@ public class FamilyRelationshipService : IFamilyRelationshipService
                 (relationship.Member != null && (relationship.Member.FirstName != null && relationship.Member.FirstName.Contains(normalizedTerm)))
                 || (relationship.RelatedMember != null && (relationship.RelatedMember.FirstName != null && relationship.RelatedMember.FirstName.Contains(normalizedTerm)))
                 || (relationship.RelationshipType != null && relationship.RelationshipType.Contains(normalizedTerm)))
-            .ToList()
+            .AsQueryable();
+
+        return ApplyUserFilter(query, userId, isAdmin)
             .OrderBy(relationship => relationship.Member?.FirstName ?? string.Empty)
             .ThenBy(relationship => relationship.RelatedMember?.FirstName ?? string.Empty)
             .ToList();
@@ -112,12 +122,16 @@ public class FamilyRelationshipService : IFamilyRelationshipService
     /// <summary>
     /// Returns all relationships for one family member.
     /// </summary>
-    public IEnumerable<FamilyRelationship> GetByMemberId(int memberId)
+    public IEnumerable<FamilyRelationship> GetByMemberId(int memberId, string? userId = null, bool isAdmin = false)
     {
-        return _context.FamilyRelationships
+        var query = _context.FamilyRelationships
             .AsNoTracking()
-            .Where(x => x.MemberId == memberId)
+            .Include(x => x.Member)
             .Include(x => x.RelatedMember)
+            .Where(x => x.MemberId == memberId || x.RelatedMemberId == memberId)
+            .AsQueryable();
+
+        return ApplyUserFilter(query, userId, isAdmin)
             .OrderBy(x => x.RelationshipType)
             .ToList();
     }
@@ -209,6 +223,36 @@ public class FamilyRelationshipService : IFamilyRelationshipService
         }
 
         await ValidateAgeCompatibilityAsync(relationship);
+    }
+
+    private IQueryable<FamilyRelationship> ApplyUserFilter(IQueryable<FamilyRelationship> query, string? userId, bool isAdmin)
+    {
+        if (isAdmin || string.IsNullOrWhiteSpace(userId))
+        {
+            return query;
+        }
+
+        return query.Where(relationship =>
+            (relationship.Member != null && relationship.Member.UserId == userId)
+            || (relationship.RelatedMember != null && relationship.RelatedMember.UserId == userId));
+    }
+
+    private async Task ValidateRelationshipOwnershipAsync(FamilyRelationship relationship, string? userId, bool isAdmin)
+    {
+        if (isAdmin || string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
+        var members = await _context.FamilyMembers
+            .AsNoTracking()
+            .Where(x => x.Id == relationship.MemberId || x.Id == relationship.RelatedMemberId)
+            .ToListAsync();
+
+        if (members.Count != 2 || members.Any(member => !string.Equals(member.UserId, userId, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to manage relationships for one or more selected family members.");
+        }
     }
 
     private bool WouldCreateCircularRelationship(FamilyRelationship relationship, int? currentRelationshipId)

@@ -61,5 +61,11 @@ public class FamilyHubDbContext : IdentityDbContext<ApplicationUser>
         .WithMany()
         .HasForeignKey(fr => fr.RelatedMemberId)
         .OnDelete(DeleteBehavior.Restrict);
+
+    modelBuilder.Entity<FamilyMember>()
+        .HasOne(member => member.User)
+        .WithMany()
+        .HasForeignKey(member => member.UserId)
+        .OnDelete(DeleteBehavior.Restrict);
 }
     }

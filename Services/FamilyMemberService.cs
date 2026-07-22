@@ -34,16 +34,21 @@ public class FamilyMemberService : IFamilyMemberService
     /// <summary>
     /// Returns all family members from the database.
     /// </summary>
+    /// <param name="userId">The current user identifier used to scope results.</param>
+    /// <param name="isAdmin">Whether the calling user has administrator privileges.</param>
     /// <returns>A list of family members.</returns>
-    public IEnumerable<FamilyMember> GetAll()
+    public IEnumerable<FamilyMember> GetAll(string? userId = null, bool isAdmin = false)
     {
-        return _context.FamilyMembers
+        var query = _context.FamilyMembers
             .AsNoTracking()
             .Include(x => x.RelatedFamilyMember)
             .Include(x => x.Relationships)
                 .ThenInclude(x => x.RelatedMember)
             .OrderBy(x => x.FirstName)
-            .ToList();
+            .AsQueryable();
+
+        query = ApplyUserFilter(query, userId, isAdmin);
+        return query.ToList();
     }
 
     /// <summary>
@@ -51,14 +56,17 @@ public class FamilyMemberService : IFamilyMemberService
     /// </summary>
     /// <param name="id">The unique identifier.</param>
     /// <returns>The matching family member.</returns>
-    public async Task<FamilyMember?> GetByIdAsync(int id)
+    public async Task<FamilyMember?> GetByIdAsync(int id, string? userId = null, bool isAdmin = false)
     {
-        return await _context.FamilyMembers
+        var query = _context.FamilyMembers
             .AsNoTracking()
             .Include(x => x.RelatedFamilyMember)
             .Include(x => x.Relationships)
                 .ThenInclude(x => x.RelatedMember)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .Where(x => x.Id == id);
+
+        query = ApplyUserFilter(query, userId, isAdmin);
+        return await query.FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -66,9 +74,13 @@ public class FamilyMemberService : IFamilyMemberService
     /// </summary>
     /// <param name="familyMember">The new family member to create.</param>
     /// <returns>The created family member.</returns>
-    public async Task<FamilyMember> CreateAsync(FamilyMember familyMember)
+    public async Task<FamilyMember> CreateAsync(FamilyMember familyMember, string? userId = null)
     {
-        // Add the new family member to the database and save changes.
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            familyMember.UserId = userId;
+        }
+
         _context.FamilyMembers.Add(familyMember);
         await _context.SaveChangesAsync();
         return familyMember;
@@ -79,13 +91,23 @@ public class FamilyMemberService : IFamilyMemberService
     /// </summary>
     /// <param name="familyMember">The updated family member.</param>
     /// <returns>The updated family member.</returns>
-    public async Task<FamilyMember> UpdateAsync(FamilyMember familyMember)
+    public async Task<FamilyMember> UpdateAsync(FamilyMember familyMember, string? userId = null, bool isAdmin = false)
     {
         var existingFamilyMember = await _context.FamilyMembers.FindAsync(familyMember.Id);
 
         if (existingFamilyMember is null)
         {
             throw new InvalidOperationException("The requested family member was not found.");
+        }
+
+        if (!isAdmin && !string.Equals(existingFamilyMember.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException("You are not allowed to update this family member.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            familyMember.UserId = existingFamilyMember.UserId ?? userId;
         }
 
         _context.Entry(existingFamilyMember).CurrentValues.SetValues(familyMember);
@@ -98,10 +120,12 @@ public class FamilyMemberService : IFamilyMemberService
     /// Deletes a family member record by identifier.
     /// </summary>
     /// <param name="id">The identifier to delete.</param>
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, string? userId = null, bool isAdmin = false)
     {
-        var familyMember = await _context.FamilyMembers.FindAsync(id);
+        var query = _context.FamilyMembers.AsQueryable().Where(x => x.Id == id);
+        query = ApplyUserFilter(query, userId, isAdmin);
 
+        var familyMember = await query.FirstOrDefaultAsync();
         if (familyMember is null)
         {
             return;
@@ -117,26 +141,19 @@ public class FamilyMemberService : IFamilyMemberService
     /// </summary>
     /// <param name="searchTerm">The search text.</param>
     /// <returns>A list of matching family members.</returns>
-    public async Task<IEnumerable<FamilyMember>> Search(string? searchTerm)
+    public async Task<IEnumerable<FamilyMember>> Search(string? searchTerm, string? userId = null, bool isAdmin = false)
     {
-        // If the user leaves the box empty, return the full list without applying any filter.
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return await _context.FamilyMembers
-                .AsNoTracking()
-                .OrderBy(member => member.FirstName)
-                .ThenBy(member => member.LastName)
-                .ToListAsync();
-        }
-
-        // Trim the input once and normalize it so the same logic works for every field and every search term.
-        var normalizedSearchTerm = searchTerm.Trim().ToLowerInvariant();
-
-        // Keep the filtering in the database layer and only materialize the matching rows after the predicate has been applied.
         var query = _context.FamilyMembers
             .AsNoTracking()
-            .Where(member =>
-                member.Id.ToString().Contains(searchTerm.Trim())
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearchTerm = searchTerm.Trim().ToLowerInvariant();
+            var trimmedSearchTerm = searchTerm.Trim();
+
+            query = query.Where(member =>
+                member.Id.ToString().Contains(trimmedSearchTerm)
                 || (member.FirstName != null && member.FirstName.ToLower().Contains(normalizedSearchTerm))
                 || (member.LastName != null && member.LastName.ToLower().Contains(normalizedSearchTerm))
                 || (member.FirstName + " " + member.LastName).ToLower().Contains(normalizedSearchTerm)
@@ -156,10 +173,23 @@ public class FamilyMemberService : IFamilyMemberService
                 || (member.MaritalStatus != null && member.MaritalStatus.ToLower().Contains(normalizedSearchTerm))
                 || (member.Relationship != null && member.Relationship.ToLower().Contains(normalizedSearchTerm))
                 || (member.Notes != null && member.Notes.ToLower().Contains(normalizedSearchTerm)));
+        }
+
+        query = ApplyUserFilter(query, userId, isAdmin);
 
         return await query
             .OrderBy(member => member.FirstName)
             .ThenBy(member => member.LastName)
             .ToListAsync();
+    }
+
+    private static IQueryable<FamilyMember> ApplyUserFilter(IQueryable<FamilyMember> query, string? userId, bool isAdmin)
+    {
+        if (isAdmin || string.IsNullOrWhiteSpace(userId))
+        {
+            return query;
+        }
+
+        return query.Where(member => member.UserId == userId);
     }
 }

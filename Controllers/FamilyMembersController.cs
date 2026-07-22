@@ -40,7 +40,9 @@ public class FamilyMembersController : Controller
     /// <returns>The family members page.</returns>
     public async Task<IActionResult> Index(string? searchTerm)
     {
-        var familyMembers = await _familyMemberService.Search(searchTerm);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var familyMembers = await _familyMemberService.Search(searchTerm, currentUserId, isAdmin);
         ViewData["SearchTerm"] = searchTerm;
 
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -110,7 +112,8 @@ public class FamilyMembersController : Controller
             UpdatedAt = DateTime.UtcNow
         };
 
-        var createdMember = await _familyMemberService.CreateAsync(familyMember);
+        var currentUserId = GetCurrentUserId();
+        var createdMember = await _familyMemberService.CreateAsync(familyMember, currentUserId);
         await _activityLogService.LogAsync(
             "Member Created",
             $"Created family member record for {createdMember.FullName}.",
@@ -184,7 +187,9 @@ public class FamilyMembersController : Controller
 
         ValidateImageFile(imageFile);
 
-        var existingFamilyMember = await _familyMemberService.GetByIdAsync(id);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var existingFamilyMember = await _familyMemberService.GetByIdAsync(id, currentUserId, isAdmin);
 
         if (existingFamilyMember is null)
         {
@@ -241,7 +246,7 @@ public class FamilyMembersController : Controller
 
         try
         {
-            await _familyMemberService.UpdateAsync(existingFamilyMember);
+            await _familyMemberService.UpdateAsync(existingFamilyMember, currentUserId, isAdmin);
             await _activityLogService.LogAsync(
                 "Member Updated",
                 $"Updated family member profile for {existingFamilyMember.FullName}.",
@@ -325,7 +330,9 @@ public class FamilyMembersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var familyMember = await _familyMemberService.GetByIdAsync(id);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var familyMember = await _familyMemberService.GetByIdAsync(id, currentUserId, isAdmin);
 
         if (familyMember is null)
         {
@@ -522,11 +529,24 @@ public class FamilyMembersController : Controller
     /// <returns>A select list ready for the form.</returns>
     private IEnumerable<FamilyMember> GetAvailableFamilyMembersForRelationship(int? currentMemberId)
     {
-        return _familyMemberService.GetAll()
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+
+        return _familyMemberService.GetAll(currentUserId, isAdmin)
             .Where(member => currentMemberId is null || member.Id != currentMemberId.Value)
             .OrderBy(member => member.FirstName)
             .ThenBy(member => member.LastName)
             .ToList();
+    }
+
+    private string? GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    private bool IsCurrentUserAdmin()
+    {
+        return User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy);
     }
 
     /// <summary>
