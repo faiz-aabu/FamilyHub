@@ -202,16 +202,8 @@ static async Task LogMissingDatabaseObjectsAsync(FamilyHubDbContext dbContext, I
     Console.WriteLine($"[DatabaseDiagnostics] Database schema mismatch. Missing columns: {missing}");
 }
 
-// Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
+// Temporarily show full exception details while debugging login failures.
+app.UseDeveloperExceptionPage();
 
 app.Use(async (context, next) =>
 {
