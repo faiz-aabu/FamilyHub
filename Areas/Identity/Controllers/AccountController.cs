@@ -579,16 +579,9 @@ public class AccountController : Controller
 
     private IActionResult RedirectToLocal(string? returnUrl, ApplicationUser? user = null, IList<string>? roles = null)
     {
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-        {
-            _logger.LogInformation("Login redirect selected return URL. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), returnUrl);
-            Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>() )}; RedirectUrl={returnUrl}");
-            return Redirect(returnUrl);
-        }
-
-        var redirectUrl = Url.Action("Dashboard", "Home", new { area = "" }) ?? "/Home/Dashboard";
-        _logger.LogInformation("Login redirect selected default dashboard. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
+        var redirectUrl = Url.Action("Index", "Home", new { area = "" }) ?? "/Home/Index";
+        _logger.LogInformation("Login redirect selected Home/Index. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
         Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>())}; RedirectUrl={redirectUrl}");
-        return RedirectToAction("Dashboard", "Home", new { area = "" });
+        return RedirectToAction("Index", "Home", new { area = "" });
     }
 }
