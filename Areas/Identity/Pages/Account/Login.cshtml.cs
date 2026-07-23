@@ -76,13 +76,6 @@ public class LoginModel : PageModel
                 _logger.LogInformation("Razor login authenticated. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), redirectDestination);
                 Console.WriteLine($"[RazorLogin] Authenticated; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={redirectDestination}");
 
-                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
-                {
-                    _logger.LogInformation("Razor login redirect starting. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), ReturnUrl);
-                    Console.WriteLine($"[RazorLogin] Redirect starting; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={ReturnUrl}");
-                    return Redirect(ReturnUrl);
-                }
-
                 _logger.LogInformation("Razor login redirect starting to Home/Index. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), redirectDestination);
                 Console.WriteLine($"[RazorLogin] Redirect starting; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={redirectDestination}");
                 return RedirectToAction("Index", "Home", new { area = "" });
