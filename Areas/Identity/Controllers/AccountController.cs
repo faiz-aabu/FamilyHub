@@ -16,17 +16,20 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IActivityLogService _activityLogService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IActivityLogService activityLogService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _activityLogService = activityLogService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -78,9 +81,10 @@ public class AccountController : Controller
                         "Success",
                         "bi-box-arrow-in-right");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Notification delivery errors should not block sign-in.
+                    _logger.LogError(ex, "Login success notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                    Console.WriteLine($"[CaughtException] Login success notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
                 }
             }
 
@@ -110,9 +114,10 @@ public class AccountController : Controller
                     "Error",
                     "bi-shield-lock-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block sign-in.
+                _logger.LogError(ex, "Login failure notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Login failure notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
         }
 
@@ -182,9 +187,10 @@ public class AccountController : Controller
                     "Success",
                     "bi-person-check-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block registration.
+                _logger.LogError(ex, "Registration notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Registration notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
             return RedirectToLocal(returnUrl);
@@ -384,9 +390,10 @@ public class AccountController : Controller
                     "Information",
                     "bi-person-lines-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block profile updates.
+                _logger.LogError(ex, "Profile update notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Profile update notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
             return RedirectToAction(nameof(Manage));
@@ -453,9 +460,10 @@ public class AccountController : Controller
                     "Success",
                     "bi-key-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block password changes.
+                _logger.LogError(ex, "Password change notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Password change notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
             return RedirectToAction(nameof(Manage));
@@ -513,9 +521,10 @@ public class AccountController : Controller
                     "Information",
                     "bi-shield-check");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block security updates.
+                _logger.LogError(ex, "Security update notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Security update notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
             return RedirectToAction(nameof(Manage));

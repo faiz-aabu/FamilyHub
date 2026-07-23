@@ -1,0 +1,18 @@
+@page
+@model FamilyHub.Pages.ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+<p><strong>Request ID:</strong> <code>@Model.RequestId</code></p>
+
+@if (Model.ShowDetails && Model.ExceptionDetails is not null)
+{
+    <h3>Exception details</h3>
+    <p><strong>Type:</strong> @Model.ExceptionType</p>
+    <p><strong>Message:</strong> @Model.ExceptionMessage</p>
+    <pre class="text-danger">@Model.ExceptionDetails</pre>
+}

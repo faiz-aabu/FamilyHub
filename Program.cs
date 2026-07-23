@@ -3,6 +3,7 @@ using FamilyHub.Data;
 using FamilyHub.Interfaces;
 using FamilyHub.Models;
 using FamilyHub.Services;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -11,6 +12,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add MVC support with global anti-forgery validation
 builder.Services.AddControllersWithViews(options =>
@@ -128,9 +133,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure pipeline
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 

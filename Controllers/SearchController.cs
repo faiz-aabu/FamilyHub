@@ -16,13 +16,15 @@ public class SearchController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IActivityLogService _activityLogService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<SearchController> _logger;
 
-    public SearchController(FamilyHubDbContext context, UserManager<ApplicationUser> userManager, IActivityLogService activityLogService, INotificationService notificationService)
+    public SearchController(FamilyHubDbContext context, UserManager<ApplicationUser> userManager, IActivityLogService activityLogService, INotificationService notificationService, ILogger<SearchController> logger)
     {
         _context = context;
         _userManager = userManager;
         _activityLogService = activityLogService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -111,8 +113,10 @@ public class SearchController : Controller
             viewModel.Reports = reports;
             viewModel.HasResults = familyMembers.Any() || relationships.Any() || users.Any() || notifications.Any() || auditLogs.Any() || reports.Any();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Search failed. User: {User}, Path: {Path}, Query: {Query}", User.Identity?.Name ?? "Anonymous", Request.Path, searchTerm);
+            Console.WriteLine($"[CaughtException] Search failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}; Query={searchTerm}{Environment.NewLine}{ex}");
             viewModel.ErrorMessage = "Search could not be completed right now. Please try again or contact support if the issue continues.";
             viewModel.HasResults = false;
         }

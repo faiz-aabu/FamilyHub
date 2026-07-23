@@ -16,13 +16,15 @@ public class UsersController : Controller
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly INotificationService _notificationService;
     private readonly IActivityLogService _activityLogService;
+    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, INotificationService notificationService, IActivityLogService activityLogService)
+    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, INotificationService notificationService, IActivityLogService activityLogService, ILogger<UsersController> logger)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _notificationService = notificationService;
         _activityLogService = activityLogService;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index()
@@ -231,9 +233,10 @@ public class UsersController : Controller
                 "Information",
                 "bi-person-gear");
         }
-        catch
+        catch (Exception ex)
         {
-            // Notification delivery errors should not block role updates.
+            _logger.LogError(ex, "Role update notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Role update notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
         }
         return RedirectToAction(nameof(Index));
     }
@@ -304,9 +307,10 @@ public class UsersController : Controller
                 "Warning",
                 "bi-key-fill");
         }
-        catch
+        catch (Exception ex)
         {
-            // Notification delivery errors should not block password resets.
+            _logger.LogError(ex, "Password reset notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Password reset notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
         }
         return RedirectToAction(nameof(Index));
     }
@@ -427,9 +431,10 @@ public class UsersController : Controller
                 "Warning",
                 "bi-lock-fill");
         }
-        catch
+        catch (Exception ex)
         {
-            // Notification delivery errors should not block account lockouts.
+            _logger.LogError(ex, "Account lock notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Account lock notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
         }
         return RedirectToAction(nameof(Index));
     }
@@ -490,9 +495,10 @@ public class UsersController : Controller
                 "Success",
                 "bi-unlock-fill");
         }
-        catch
+        catch (Exception ex)
         {
-            // Notification delivery errors should not block account unlocks.
+            _logger.LogError(ex, "Account unlock notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Account unlock notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
         }
         return RedirectToAction(nameof(Index));
     }

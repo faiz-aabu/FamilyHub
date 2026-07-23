@@ -64,9 +64,10 @@ public class FamilyRelationshipsController : Controller
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // swallow logging errors to avoid masking validation issues
+                _logger.LogError(ex, "Failed while logging relationship validation errors. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Relationship validation logging failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
             return View(relationship);
@@ -97,9 +98,10 @@ public class FamilyRelationshipsController : Controller
                         "Success",
                         "bi-diagram-3-fill");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Notification delivery errors should not block the main relationship workflow.
+                    _logger.LogError(ex, "Relationship creation notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                    Console.WriteLine($"[CaughtException] Relationship creation notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
                 }
             }
 
@@ -108,6 +110,7 @@ public class FamilyRelationshipsController : Controller
         }
         catch (RelationshipValidationException ex)
         {
+            _logger.LogError(ex, "Relationship validation failed during creation. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
             ModelState.AddModelError(ex.PropertyName ?? string.Empty, ex.Message);
             ModelState.AddModelError(string.Empty, ex.Message);
             return View(relationship);
@@ -177,9 +180,10 @@ public class FamilyRelationshipsController : Controller
                         "Information",
                         "bi-pencil-square");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Notification delivery errors should not block the main relationship workflow.
+                    _logger.LogError(ex, "Relationship update notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                    Console.WriteLine($"[CaughtException] Relationship update notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
                 }
             }
 
@@ -188,6 +192,7 @@ public class FamilyRelationshipsController : Controller
         }
         catch (RelationshipValidationException ex)
         {
+            _logger.LogError(ex, "Relationship validation failed during update. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
             ModelState.AddModelError(ex.PropertyName ?? string.Empty, ex.Message);
             ModelState.AddModelError(string.Empty, ex.Message);
             return View(relationship);
@@ -237,9 +242,10 @@ public class FamilyRelationshipsController : Controller
                     "Warning",
                     "bi-diagram-3-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block the main relationship workflow.
+                _logger.LogError(ex, "Relationship deletion notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Relationship deletion notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
         }
         return RedirectToAction(nameof(Index));

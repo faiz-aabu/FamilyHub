@@ -10,11 +10,13 @@ public class ActivityLogsController : Controller
 {
     private readonly IActivityLogService _activityLogService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<ActivityLogsController> _logger;
 
-    public ActivityLogsController(IActivityLogService activityLogService, INotificationService notificationService)
+    public ActivityLogsController(IActivityLogService activityLogService, INotificationService notificationService, ILogger<ActivityLogsController> logger)
     {
         _activityLogService = activityLogService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index(string? searchTerm, string? actionFilter, string? userFilter, DateTime? dateFrom, DateTime? dateTo, int pageNumber = 1)
@@ -62,9 +64,10 @@ public class ActivityLogsController : Controller
                 "Success",
                 "bi-download");
         }
-        catch
+        catch (Exception ex)
         {
-            // Notification delivery errors should not block CSV exports.
+            _logger.LogError(ex, "Notification failed after activity log CSV export. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Activity log export notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
         }
 
         return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "activity-log.csv");

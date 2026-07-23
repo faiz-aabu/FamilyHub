@@ -9,11 +9,13 @@ public class BackupsController : Controller
 {
     private readonly IBackupService _backupService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<BackupsController> _logger;
 
-    public BackupsController(IBackupService backupService, INotificationService notificationService)
+    public BackupsController(IBackupService backupService, INotificationService notificationService, ILogger<BackupsController> logger)
     {
         _backupService = backupService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index(string? searchTerm, string? sortOrder)
@@ -42,13 +44,16 @@ public class BackupsController : Controller
                     "Success",
                     "bi-cloud-arrow-up-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block backup creation.
+                _logger.LogError(ex, "Notification failed after backup creation. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Backup notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Backup creation failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Backup creation failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             TempData["ErrorMessage"] = ex.Message;
         }
 
@@ -66,6 +71,8 @@ public class BackupsController : Controller
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Backup restore failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Backup restore failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             TempData["ErrorMessage"] = ex.Message;
         }
 
@@ -83,6 +90,8 @@ public class BackupsController : Controller
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Backup deletion failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Backup deletion failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             TempData["ErrorMessage"] = ex.Message;
         }
 
@@ -100,6 +109,8 @@ public class BackupsController : Controller
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Backup rename failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Backup rename failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             TempData["ErrorMessage"] = ex.Message;
         }
 

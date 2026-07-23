@@ -16,12 +16,14 @@ public class ActivityLogService : IActivityLogService
     private readonly FamilyHubDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<ActivityLogService> _logger;
 
-    public ActivityLogService(FamilyHubDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
+    public ActivityLogService(FamilyHubDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager, ILogger<ActivityLogService> logger)
     {
         _context = context;
         _httpContextAccessor = httpContextAccessor;
         _userManager = userManager;
+        _logger = logger;
     }
 
     public async Task LogAsync(string action, string description, string? entityName = null, string? entityId = null, bool success = true, string? details = null)
@@ -51,9 +53,10 @@ public class ActivityLogService : IActivityLogService
             _context.ActivityLogs.Add(logEntry);
             await _context.SaveChangesAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort audit logging should never break the main workflow.
+            _logger.LogError(ex, "Activity log persistence failed. User: {User}, Path: {Path}", _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Anonymous", _httpContextAccessor.HttpContext?.Request.Path.ToString() ?? "(no request)");
+            Console.WriteLine($"[CaughtException] Activity log persistence failed; User={_httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Anonymous"}; Path={_httpContextAccessor.HttpContext?.Request.Path.ToString() ?? "(no request)"}{Environment.NewLine}{ex}");
         }
     }
 

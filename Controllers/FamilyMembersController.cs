@@ -19,19 +19,21 @@ public class FamilyMembersController : Controller
     private readonly IActivityLogService _activityLogService;
     private readonly INotificationService _notificationService;
     private readonly IFamilyRelationshipService _relationshipService;
+    private readonly ILogger<FamilyMembersController> _logger;
 
     /// <summary>
     /// Creates a new family members controller instance.
     /// </summary>
     /// <param name="familyMemberService">The service that provides family member data.</param>
     /// <param name="webHostEnvironment">The environment used to find the web root path.</param>
-    public FamilyMembersController(IFamilyMemberService familyMemberService, IWebHostEnvironment webHostEnvironment, IActivityLogService activityLogService, INotificationService notificationService, IFamilyRelationshipService relationshipService)
+    public FamilyMembersController(IFamilyMemberService familyMemberService, IWebHostEnvironment webHostEnvironment, IActivityLogService activityLogService, INotificationService notificationService, IFamilyRelationshipService relationshipService, ILogger<FamilyMembersController> logger)
     {
         _familyMemberService = familyMemberService;
         _webHostEnvironment = webHostEnvironment;
         _activityLogService = activityLogService;
         _notificationService = notificationService;
         _relationshipService = relationshipService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -136,9 +138,10 @@ public class FamilyMembersController : Controller
                     "Success",
                     "bi-person-plus-fill");
             }
-            catch
+            catch (Exception ex)
             {
-                // Notification delivery errors should not block the main family member workflow.
+                _logger.LogError(ex, "Member creation notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                Console.WriteLine($"[CaughtException] Member creation notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
         }
 
@@ -271,14 +274,17 @@ public class FamilyMembersController : Controller
                         "Information",
                         "bi-pencil-square");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Notification delivery errors should not block the main family member workflow.
+                    _logger.LogError(ex, "Member update notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                    Console.WriteLine($"[CaughtException] Member update notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
                 }
             }
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
+            _logger.LogError(ex, "Family member update concurrency failure. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Family member update concurrency failure; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             if (await _familyMemberService.GetByIdAsync(id) is null)
             {
                 return NotFound();
@@ -390,17 +396,20 @@ public class FamilyMembersController : Controller
                         "Warning",
                         "bi-person-dash-fill");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Notification delivery errors should not block the main family member workflow.
+                    _logger.LogError(ex, "Member deletion notification failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+                    Console.WriteLine($"[CaughtException] Member deletion notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
                 }
             }
 
             TempData["SuccessMessage"] = "Family member deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Family member deletion failed. User: {User}, Path: {Path}", User.Identity?.Name ?? "Anonymous", Request.Path);
+            Console.WriteLine($"[CaughtException] Family member deletion failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             TempData["ErrorMessage"] = "Unable to delete the selected family member. Please try again.";
             return RedirectToAction(nameof(Index));
         }
