@@ -37,7 +37,7 @@ public class HomeController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
-        return await ShowDashboardViewAsync();
+        return await ExecuteDashboardWithDiagnosticsAsync(nameof(Index));
     }
 
     /// <summary>
@@ -47,7 +47,34 @@ public class HomeController : Controller
     [Authorize]
     public async Task<IActionResult> Dashboard()
     {
-        return await ShowDashboardViewAsync();
+        return await ExecuteDashboardWithDiagnosticsAsync(nameof(Dashboard));
+    }
+
+    private async Task<IActionResult> ExecuteDashboardWithDiagnosticsAsync(string actionName)
+    {
+        var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userEmail = User?.Identity?.Name;
+        var roles = User?.Claims
+            .Where(claim => claim.Type == ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .ToArray() ?? Array.Empty<string>();
+
+        _logger.LogInformation("Landing action started. Action: {Action}, UserId: {UserId}, Email: {Email}, Roles: {Roles}, Path: {Path}", actionName, userId, userEmail, string.Join(", ", roles), Request.Path);
+        Console.WriteLine($"[LandingAction] Started; Action={actionName}; UserId={userId}; Email={userEmail}; Roles={string.Join(", ", roles)}; Path={Request.Path}");
+
+        try
+        {
+            var result = await ShowDashboardViewAsync();
+            _logger.LogInformation("Landing action completed. Action: {Action}, UserId: {UserId}, Path: {Path}", actionName, userId, Request.Path);
+            Console.WriteLine($"[LandingAction] Completed; Action={actionName}; UserId={userId}; Path={Request.Path}");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Landing action failed. Action: {Action}, UserId: {UserId}, Email: {Email}, Roles: {Roles}, Path: {Path}", actionName, userId, userEmail, string.Join(", ", roles), Request.Path);
+            Console.WriteLine($"[LandingAction] Failed; Action={actionName}; UserId={userId}; Email={userEmail}; Roles={string.Join(", ", roles)}; Path={Request.Path}{Environment.NewLine}{ex}");
+            throw;
+        }
     }
 
     private async Task<IActionResult> ShowDashboardViewAsync()
@@ -68,12 +95,13 @@ public class HomeController : Controller
             }
         }
 
-        var members = await membersQuery
+        _logger.LogInformation("Dashboard query starting: FamilyMembers. UserId: {UserId}, IsAdmin: {IsAdmin}", userId, isAdmin);
+        var members = await ExecuteDashboardQueryAsync("FamilyMembers", () => membersQuery
             .OrderByDescending(member => member.CreatedAt)
-            .ToListAsync();
+            .ToListAsync());
 
         var totalRegisteredUsers = isAdmin
-            ? await _context.Users.AsNoTracking().CountAsync()
+            ? await ExecuteDashboardQueryAsync("AspNetUsers count", () => _context.Users.AsNoTracking().CountAsync())
             : (string.IsNullOrWhiteSpace(userId) ? 0 : 1);
 
         var relationshipQuery = _context.FamilyRelationships.AsNoTracking();
@@ -84,7 +112,7 @@ public class HomeController : Controller
                     || (relation.RelatedMember != null && relation.RelatedMember.UserId == userId));
         }
 
-        var totalRelationships = await relationshipQuery.CountAsync();
+        var totalRelationships = await ExecuteDashboardQueryAsync("FamilyRelationships count", () => relationshipQuery.CountAsync());
 
         var recentActivitiesQuery = _context.ActivityLogs.AsNoTracking();
         if (!isAdmin)
@@ -92,7 +120,7 @@ public class HomeController : Controller
             recentActivitiesQuery = recentActivitiesQuery.Where(log => log.UserId == userId);
         }
 
-        var recentActivities = await recentActivitiesQuery
+        var recentActivities = await ExecuteDashboardQueryAsync("ActivityLogs recent", () => recentActivitiesQuery
             .OrderByDescending(log => log.Timestamp)
             .Take(8)
             .Select(log => new DashboardActivityViewModel
@@ -103,9 +131,9 @@ public class HomeController : Controller
                 Timestamp = log.Timestamp,
                 UserName = log.UserName ?? "System"
             })
-            .ToListAsync();
+            .ToListAsync());
 
-        var relationshipItems = await relationshipQuery.ToListAsync();
+        var relationshipItems = await ExecuteDashboardQueryAsync("FamilyRelationships list", () => relationshipQuery.ToListAsync());
 
         var upcomingBirthdays = members
             .Where(member => member.DateOfBirth.HasValue)
@@ -156,7 +184,7 @@ public class HomeController : Controller
 
         var recentNotifications = string.IsNullOrWhiteSpace(userId)
             ? new List<DashboardNotificationViewModel>()
-            : (await _notificationService.GetRecentForUserAsync(userId, 5))
+            : (await ExecuteDashboardQueryAsync("Notifications recent", () => _notificationService.GetRecentForUserAsync(userId, 5)))
                 .Select(notification => new DashboardNotificationViewModel
                 {
                     Id = notification.Id,
@@ -206,6 +234,22 @@ public class HomeController : Controller
         };
 
         return View("Index", dashboardViewModel);
+    }
+
+    private async Task<T> ExecuteDashboardQueryAsync<T>(string queryName, Func<Task<T>> query)
+    {
+        try
+        {
+            var result = await query();
+            _logger.LogInformation("Dashboard query completed: {QueryName}", queryName);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Dashboard query failed: {QueryName}, UserId: {UserId}, Path: {Path}", queryName, User.FindFirst(ClaimTypes.NameIdentifier)?.Value, Request.Path);
+            Console.WriteLine($"[DashboardQuery] Failed; Query={queryName}; UserId={User.FindFirst(ClaimTypes.NameIdentifier)?.Value}; Path={Request.Path}{Environment.NewLine}{ex}");
+            throw;
+        }
     }
 
     /// <summary>

@@ -45,6 +45,8 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        _logger.LogInformation("Login POST started. Email: {Email}, ReturnUrl: {ReturnUrl}, Path: {Path}", model.Email, returnUrl, Request.Path);
+        Console.WriteLine($"[Login] POST started; Email={model.Email}; ReturnUrl={returnUrl}; Path={Request.Path}");
 
         if (!ModelState.IsValid)
         {
@@ -52,10 +54,15 @@ public class AccountController : Controller
         }
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+        _logger.LogInformation("Password sign-in completed. Succeeded: {Succeeded}, LockedOut: {LockedOut}, NotAllowed: {NotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}, Email: {Email}", result.Succeeded, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor, model.Email);
+        Console.WriteLine($"[Login] Password sign-in completed; Succeeded={result.Succeeded}; LockedOut={result.IsLockedOut}; NotAllowed={result.IsNotAllowed}; RequiresTwoFactor={result.RequiresTwoFactor}; Email={model.Email}");
 
         if (result.Succeeded)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
+            var roles = user is null ? Array.Empty<string>() : await _userManager.GetRolesAsync(user);
+            _logger.LogInformation("Successful login user loaded. UserId: {UserId}, Email: {Email}, Roles: {Roles}", user?.Id, user?.Email, string.Join(", ", roles));
+            Console.WriteLine($"[Login] Successful user loaded; UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles)}");
             await _activityLogService.LogAsync(
                 "Login",
                 user is null ? "User signed in successfully." : $"User {user.FullName ?? user.Email} signed in.",
@@ -88,7 +95,7 @@ public class AccountController : Controller
                 }
             }
 
-            return RedirectToLocal(returnUrl);
+            return RedirectToLocal(returnUrl, user, roles);
         }
 
         var failedUser = await _userManager.FindByEmailAsync(model.Email);
@@ -570,13 +577,18 @@ public class AccountController : Controller
         return View(model);
     }
 
-    private IActionResult RedirectToLocal(string? returnUrl)
+    private IActionResult RedirectToLocal(string? returnUrl, ApplicationUser? user = null, IList<string>? roles = null)
     {
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
+            _logger.LogInformation("Login redirect selected return URL. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), returnUrl);
+            Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>() )}; RedirectUrl={returnUrl}");
             return Redirect(returnUrl);
         }
 
+        var redirectUrl = Url.Action("Dashboard", "Home", new { area = "" }) ?? "/Home/Dashboard";
+        _logger.LogInformation("Login redirect selected default dashboard. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
+        Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>())}; RedirectUrl={redirectUrl}");
         return RedirectToAction("Dashboard", "Home", new { area = "" });
     }
 }

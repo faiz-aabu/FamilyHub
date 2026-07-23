@@ -10,10 +10,14 @@ namespace FamilyHub.Areas.Identity.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(SignInManager<ApplicationUser> signInManager)
+    public LoginModel(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, ILogger<LoginModel> logger)
     {
         _signInManager = signInManager;
+        _userManager = userManager;
+        _logger = logger;
     }
 
     [BindProperty]
@@ -46,6 +50,8 @@ public class LoginModel : PageModel
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
         ReturnUrl = returnUrl;
+        _logger.LogInformation("Razor login POST started. Email: {Email}, ReturnUrl: {ReturnUrl}, Path: {Path}", Input.Email, ReturnUrl, Request.Path);
+        Console.WriteLine($"[RazorLogin] POST started; Email={Input.Email}; ReturnUrl={ReturnUrl}; Path={Request.Path}");
 
         if (!ModelState.IsValid)
         {
@@ -53,15 +59,40 @@ public class LoginModel : PageModel
         }
 
         var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        _logger.LogInformation("Razor password sign-in completed. Succeeded: {Succeeded}, LockedOut: {LockedOut}, NotAllowed: {NotAllowed}, RequiresTwoFactor: {RequiresTwoFactor}, Email: {Email}", result.Succeeded, result.IsLockedOut, result.IsNotAllowed, result.RequiresTwoFactor, Input.Email);
+        Console.WriteLine($"[RazorLogin] Password sign-in completed; Succeeded={result.Succeeded}; LockedOut={result.IsLockedOut}; NotAllowed={result.IsNotAllowed}; RequiresTwoFactor={result.RequiresTwoFactor}; Email={Input.Email}");
 
         if (result.Succeeded)
         {
-            if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+            try
             {
-                return Redirect(ReturnUrl);
-            }
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+                var roles = user is null ? Array.Empty<string>() : await _userManager.GetRolesAsync(user);
+                var userName = user?.UserName ?? "(unknown)";
+                var redirectDestination = !string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl)
+                    ? ReturnUrl
+                    : Url.Action("Index", "Home", new { area = "" }) ?? "/Home/Index";
 
-            return LocalRedirect("~/");
+                _logger.LogInformation("Razor login authenticated. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), redirectDestination);
+                Console.WriteLine($"[RazorLogin] Authenticated; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={redirectDestination}");
+
+                if (!string.IsNullOrWhiteSpace(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                {
+                    _logger.LogInformation("Razor login redirect starting. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), ReturnUrl);
+                    Console.WriteLine($"[RazorLogin] Redirect starting; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={ReturnUrl}");
+                    return Redirect(ReturnUrl);
+                }
+
+                _logger.LogInformation("Razor login redirect starting to Home/Index. UserId: {UserId}, Email: {Email}, Username: {Username}, Roles: {Roles}, RedirectDestination: {RedirectDestination}", user?.Id, user?.Email, userName, string.Join(", ", roles), redirectDestination);
+                Console.WriteLine($"[RazorLogin] Redirect starting; UserId={user?.Id}; Email={user?.Email}; Username={userName}; Roles={string.Join(", ", roles)}; RedirectDestination={redirectDestination}");
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Razor login succeeded but post-authentication redirect preparation failed. Email: {Email}, ReturnUrl: {ReturnUrl}, Path: {Path}", Input.Email, ReturnUrl, Request.Path);
+                Console.WriteLine($"[RazorLogin] Post-authentication redirect preparation failed; Email={Input.Email}; ReturnUrl={ReturnUrl}; Path={Request.Path}{Environment.NewLine}{ex}");
+                throw;
+            }
         }
 
         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
