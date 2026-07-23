@@ -82,7 +82,7 @@
                     <ul class="navbar-nav ms-auto align-items-lg-center flex-nowrap" style="gap: 0.5rem;">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            @if (User.IsInRole("Admin"))
+                            @if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy))
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle nav-pill nav-pill--admin px-3" href="#" id="systemManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

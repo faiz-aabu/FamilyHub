@@ -24,6 +24,16 @@ public class ApplicationUser : IdentityUser
     public string? ProfilePicturePath { get; set; }
 
     /// <summary>
+    /// Gets or sets the user's preferred postal address.
+    /// </summary>
+    public string? Address { get; set; }
+
+    /// <summary>
+    /// Gets or sets a short biography for the user.
+    /// </summary>
+    public string? Bio { get; set; }
+
+    /// <summary>
     /// Gets or sets the most recent successful login timestamp.
     /// </summary>
     public DateTimeOffset? LastLoginAt { get; set; }

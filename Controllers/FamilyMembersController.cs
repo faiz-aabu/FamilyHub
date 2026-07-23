@@ -158,7 +158,9 @@ public class FamilyMembersController : Controller
             return NotFound();
         }
 
-        var familyMember = await _familyMemberService.GetByIdAsync(id.Value);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var familyMember = await _familyMemberService.GetByIdAsync(id.Value, currentUserId, isAdmin);
 
         if (familyMember is null)
         {
@@ -306,7 +308,9 @@ public class FamilyMembersController : Controller
             return NotFound();
         }
 
-        var familyMember = await _familyMemberService.GetByIdAsync(id.Value);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var familyMember = await _familyMemberService.GetByIdAsync(id.Value, currentUserId, isAdmin);
 
         if (familyMember is null)
         {
@@ -409,7 +413,9 @@ public class FamilyMembersController : Controller
     /// <returns>The details view or a friendly not found page.</returns>
     public async Task<IActionResult> Details(int id)
     {
-        var familyMember = await _familyMemberService.GetByIdAsync(id);
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = IsCurrentUserAdmin();
+        var familyMember = await _familyMemberService.GetByIdAsync(id, currentUserId, isAdmin);
 
         if (familyMember is null)
         {

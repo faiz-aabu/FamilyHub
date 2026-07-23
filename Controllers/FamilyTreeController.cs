@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using FamilyHub.Data;
 using FamilyHub.Models;
@@ -46,14 +47,36 @@ public class FamilyTreeController : Controller
 
     private async Task<TreeDataResult> BuildTreeDataAsync()
     {
-        var members = await _context.FamilyMembers
-            .AsNoTracking()
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy);
+
+        var membersQuery = _context.FamilyMembers.AsNoTracking();
+        if (!isAdmin)
+        {
+            membersQuery = string.IsNullOrWhiteSpace(userId)
+                ? membersQuery.Where(member => false)
+                : membersQuery.Where(member => member.UserId == userId);
+        }
+
+        var members = await membersQuery
             .OrderBy(member => member.FirstName)
             .ThenBy(member => member.LastName)
             .ToListAsync();
 
-        var links = await _context.FamilyRelationships
+        IQueryable<FamilyRelationship> linksQuery = _context.FamilyRelationships
             .AsNoTracking()
+            .Include(relation => relation.Member)
+            .Include(relation => relation.RelatedMember);
+
+        if (!isAdmin)
+        {
+            linksQuery = string.IsNullOrWhiteSpace(userId)
+                ? linksQuery.Where(relation => false)
+                : linksQuery.Where(relation => (relation.Member != null && relation.Member.UserId == userId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == userId));
+        }
+
+        var links = await linksQuery
             .OrderBy(relation => relation.MemberId)
             .ThenBy(relation => relation.RelatedMemberId)
             .ToListAsync();

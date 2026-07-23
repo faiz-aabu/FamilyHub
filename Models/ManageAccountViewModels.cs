@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace FamilyHub.Models;
 
@@ -22,15 +23,12 @@ public class ManageAccountViewModel
     [Display(Name = "Phone Number")]
     public string? PhoneNumber { get; set; }
 
-    [Display(Name = "Dark Mode")]
-    public bool DarkModePreference { get; set; }
+    [Display(Name = "Address")]
+    public string? Address { get; set; }
 
-    [Display(Name = "Notifications")]
-    public bool NotificationPreference { get; set; } = true;
-
-    [Required(ErrorMessage = "Please select a language.")]
-    [Display(Name = "Language")]
-    public string PreferredLanguage { get; set; } = "English";
+    [Display(Name = "Bio")]
+    [StringLength(2000, ErrorMessage = "The bio cannot exceed {1} characters.")]
+    public string? Bio { get; set; }
 
     [DataType(DataType.Password)]
     [Display(Name = "Current Password")]
@@ -38,7 +36,7 @@ public class ManageAccountViewModel
 
     [DataType(DataType.Password)]
     [Display(Name = "New Password")]
-    [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+    [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 8)]
     public string? NewPassword { get; set; }
 
     [DataType(DataType.Password)]
@@ -46,8 +44,12 @@ public class ManageAccountViewModel
     [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
     public string? ConfirmPassword { get; set; }
 
-    [Display(Name = "Enable Two-Factor Authentication")]
-    public bool EnableTwoFactor { get; set; }
+    [DataType(DataType.Password)]
+    [Display(Name = "Current Password")]
+    public string? DeletePassword { get; set; }
+
+    [Display(Name = "Profile Picture")]
+    public IFormFile? ProfilePictureFile { get; set; }
 
     public string? ProfilePicturePath { get; set; }
 
@@ -57,9 +59,16 @@ public class ManageAccountViewModel
 
     public string? CurrentRole { get; set; }
 
-    public IFormFile? ProfilePictureFile { get; set; }
+    public string? AccountStatus { get; set; }
+
+    public bool IsAdministrator { get; set; }
+
+    public int TotalManagedUsers { get; set; }
 
     public bool ConfirmDelete { get; set; }
+
+    [Display(Name = "Enable two-factor authentication")]
+    public bool EnableTwoFactor { get; set; }
 
     public string ActionType { get; set; } = "profile";
 }

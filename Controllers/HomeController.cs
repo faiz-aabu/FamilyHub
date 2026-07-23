@@ -52,22 +52,47 @@ public class HomeController : Controller
 
     private async Task<IActionResult> ShowDashboardViewAsync()
     {
-        // Run queries sequentially on the same DbContext to avoid concurrent access errors.
-        var members = await _context.FamilyMembers
-            .AsNoTracking()
+        var userId = User?.Identity?.IsAuthenticated == true ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
+        var isAdmin = User?.IsInRole(ApplicationRoles.Administrator) == true || User?.IsInRole(ApplicationRoles.AdminLegacy) == true;
+
+        var membersQuery = _context.FamilyMembers.AsNoTracking();
+        if (!isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                membersQuery = membersQuery.Where(member => false);
+            }
+            else
+            {
+                membersQuery = membersQuery.Where(member => member.UserId == userId);
+            }
+        }
+
+        var members = await membersQuery
             .OrderByDescending(member => member.CreatedAt)
             .ToListAsync();
 
-        var totalRegisteredUsers = await _context.Users
-            .AsNoTracking()
-            .CountAsync();
+        var totalRegisteredUsers = isAdmin
+            ? await _context.Users.AsNoTracking().CountAsync()
+            : (string.IsNullOrWhiteSpace(userId) ? 0 : 1);
 
-        var totalRelationships = await _context.FamilyRelationships
-            .AsNoTracking()
-            .CountAsync();
+        var relationshipQuery = _context.FamilyRelationships.AsNoTracking();
+        if (!isAdmin)
+        {
+            relationshipQuery = relationshipQuery
+                .Where(relation => (relation.Member != null && relation.Member.UserId == userId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == userId));
+        }
 
-        var recentActivities = await _context.ActivityLogs
-            .AsNoTracking()
+        var totalRelationships = await relationshipQuery.CountAsync();
+
+        var recentActivitiesQuery = _context.ActivityLogs.AsNoTracking();
+        if (!isAdmin)
+        {
+            recentActivitiesQuery = recentActivitiesQuery.Where(log => log.UserId == userId);
+        }
+
+        var recentActivities = await recentActivitiesQuery
             .OrderByDescending(log => log.Timestamp)
             .Take(8)
             .Select(log => new DashboardActivityViewModel
@@ -80,9 +105,7 @@ public class HomeController : Controller
             })
             .ToListAsync();
 
-        var relationshipItems = await _context.FamilyRelationships
-            .AsNoTracking()
-            .ToListAsync();
+        var relationshipItems = await relationshipQuery.ToListAsync();
 
         var upcomingBirthdays = members
             .Where(member => member.DateOfBirth.HasValue)
@@ -98,8 +121,6 @@ public class HomeController : Controller
             .OrderBy(item => item.DaysRemaining)
             .Take(6)
             .ToList();
-
-        // `recentActivities` already populated above.
 
         var genderChart = BuildChartData(
             members,
@@ -117,8 +138,6 @@ public class HomeController : Controller
             members,
             member => GetAgeGroup(member.Age));
 
-        
-
         var relationshipChart = BuildChartData(
             relationshipItems,
             relation => string.IsNullOrWhiteSpace(relation.RelationshipType) ? "Other" : relation.RelationshipType);
@@ -135,8 +154,7 @@ public class HomeController : Controller
             })
             .ToList();
 
-        var userId = User?.Identity?.IsAuthenticated == true ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
-        var recentNotifications = userId is null
+        var recentNotifications = string.IsNullOrWhiteSpace(userId)
             ? new List<DashboardNotificationViewModel>()
             : (await _notificationService.GetRecentForUserAsync(userId, 5))
                 .Select(notification => new DashboardNotificationViewModel

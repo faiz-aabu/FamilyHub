@@ -22,4 +22,30 @@
             showToast(errorMessage, 'danger');
         }
     }
+
+    const initPasswordToggle = () => {
+        document.querySelectorAll('.password-toggle-field').forEach(input => {
+            const group = input.closest('.input-group');
+            if (!group || group.querySelector('.password-toggle-button')) {
+                return;
+            }
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-outline-secondary password-toggle-button';
+            button.setAttribute('aria-label', 'Show password');
+            button.innerHTML = '<i class="bi bi-eye"></i>';
+
+            button.addEventListener('click', () => {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                button.innerHTML = `<i class="bi ${isHidden ? 'bi-eye-slash' : 'bi-eye'}"></i>`;
+                button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            });
+
+            group.appendChild(button);
+        });
+    };
+
+    initPasswordToggle();
 });

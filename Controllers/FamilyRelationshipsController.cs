@@ -27,14 +27,18 @@ public class FamilyRelationshipsController : Controller
 
     public IActionResult Index(string? searchTerm)
     {
-        var relationships = _relationshipService.Search(searchTerm);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        var relationships = _relationshipService.Search(searchTerm, currentUserId, isAdmin);
         ViewBag.SearchTerm = searchTerm;
         return View(relationships);
     }
 
     public async Task<IActionResult> Create()
     {
-        await PopulateViewBagAsync();
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        await PopulateViewBagAsync(currentUserId, isAdmin);
         return View();
     }
 
@@ -42,7 +46,9 @@ public class FamilyRelationshipsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(FamilyRelationship relationship)
     {
-        await PopulateViewBagAsync();
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        await PopulateViewBagAsync(currentUserId, isAdmin);
 
         if (!ModelState.IsValid)
         {
@@ -68,7 +74,7 @@ public class FamilyRelationshipsController : Controller
 
         try
         {
-            var createdRelationship = await _relationshipService.CreateAsync(relationship);
+            var createdRelationship = await _relationshipService.CreateAsync(relationship, currentUserId, isAdmin);
             await _activityLogService.LogAsync(
                 "Relationship Added",
                 $"Created a {createdRelationship.RelationshipType} relationship.",
@@ -77,7 +83,6 @@ public class FamilyRelationshipsController : Controller
                 true,
                 "A family relationship was added.");
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrWhiteSpace(currentUserId))
             {
                 try
@@ -117,13 +122,15 @@ public class FamilyRelationshipsController : Controller
 
     public async Task<IActionResult> Edit(int id)
     {
-        var relationship = await _relationshipService.GetByIdAsync(id);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        var relationship = await _relationshipService.GetByIdAsync(id, currentUserId, isAdmin);
         if (relationship is null)
         {
             return NotFound();
         }
 
-        await PopulateViewBagAsync();
+        await PopulateViewBagAsync(currentUserId, isAdmin);
         return View(relationship);
     }
 
@@ -131,7 +138,9 @@ public class FamilyRelationshipsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, FamilyRelationship relationship)
     {
-        await PopulateViewBagAsync();
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        await PopulateViewBagAsync(currentUserId, isAdmin);
 
         if (id != relationship.Id)
         {
@@ -145,7 +154,7 @@ public class FamilyRelationshipsController : Controller
 
         try
         {
-            await _relationshipService.UpdateAsync(relationship);
+            await _relationshipService.UpdateAsync(relationship, currentUserId, isAdmin);
             await _activityLogService.LogAsync(
                 "Update",
                 $"Updated a {relationship.RelationshipType} relationship.",
@@ -154,7 +163,6 @@ public class FamilyRelationshipsController : Controller
                 true,
                 "A family relationship was updated.");
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrWhiteSpace(currentUserId))
             {
                 try
@@ -188,7 +196,9 @@ public class FamilyRelationshipsController : Controller
 
     public async Task<IActionResult> Delete(int id)
     {
-        var relationship = await _relationshipService.GetByIdAsync(id);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        var relationship = await _relationshipService.GetByIdAsync(id, currentUserId, isAdmin);
         if (relationship is null)
         {
             return NotFound();
@@ -201,8 +211,10 @@ public class FamilyRelationshipsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var relationship = await _relationshipService.GetByIdAsync(id);
-        await _relationshipService.DeleteAsync(id);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = IsCurrentUserAdmin();
+        var relationship = await _relationshipService.GetByIdAsync(id, currentUserId, isAdmin);
+        await _relationshipService.DeleteAsync(id, currentUserId, isAdmin);
         await _activityLogService.LogAsync(
             "Relationship Deleted",
             relationship is null ? "Deleted a family relationship." : $"Deleted a {relationship.RelationshipType} relationship.",
@@ -211,7 +223,6 @@ public class FamilyRelationshipsController : Controller
             true,
             "A family relationship was removed.");
 
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrWhiteSpace(currentUserId))
         {
             try
@@ -234,9 +245,14 @@ public class FamilyRelationshipsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task PopulateViewBagAsync()
+    private bool IsCurrentUserAdmin()
     {
-        var members = await Task.FromResult(_memberService.GetAll());
+        return User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy);
+    }
+
+    private async Task PopulateViewBagAsync(string? userId = null, bool isAdmin = false)
+    {
+        var members = await Task.FromResult(_memberService.GetAll(userId, isAdmin));
         ViewBag.Members = new SelectList(members, "Id", "FullName");
         ViewBag.RelationshipTypes = FamilyRelationship.SupportedRelationshipTypes
             .Select(type => new SelectListItem(type, type))

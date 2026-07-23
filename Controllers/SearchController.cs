@@ -29,13 +29,39 @@ public class SearchController : Controller
     public async Task<IActionResult> Index(string? query, string? sortBy, string? gender, int? minAge, int? maxAge, string? nationality, string? state, string? religion, string? occupation, string? maritalStatus, string? relationshipType, string? familyBranch, DateTime? createdFrom, DateTime? createdTo, DateTime? updatedFrom, DateTime? updatedTo, int pageNumber = 1, bool showFilters = false)
     {
         var searchTerm = query ?? string.Empty;
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             await _activityLogService.LogAsync("Search Performed", $"Searched for '{searchTerm}'.", "Search", null, true, "User search executed.");
         }
 
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var memberFilter = _context.FamilyMembers.AsNoTracking();
+        if (!isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                memberFilter = memberFilter.Where(member => false);
+            }
+            else
+            {
+                memberFilter = memberFilter.Where(member => member.UserId == currentUserId);
+            }
+        }
+
+        var relationshipFilter = _context.FamilyRelationships.AsNoTracking();
+        if (!isAdmin)
+        {
+            relationshipFilter = string.IsNullOrWhiteSpace(currentUserId)
+                ? relationshipFilter.Where(relation => false)
+                : relationshipFilter
+                    .Include(relation => relation.Member)
+                    .Include(relation => relation.RelatedMember)
+                    .Where(relation => (relation.Member != null && relation.Member.UserId == currentUserId)
+                        || (relation.RelatedMember != null && relation.RelatedMember.UserId == currentUserId));
+        }
+
         var viewModel = new SearchViewModel
         {
             Query = searchTerm,
@@ -60,22 +86,22 @@ public class SearchController : Controller
             HasResults = false,
             RecentSearches = GetRecentSearches(),
             Suggestions = GetSuggestions(searchTerm),
-            AvailableGenders = await _context.FamilyMembers.AsNoTracking().Where(member => !string.IsNullOrWhiteSpace(member.Gender)).Select(member => member.Gender!).Distinct().OrderBy(value => value).ToListAsync(),
-            AvailableNationalities = await _context.FamilyMembers.AsNoTracking().Where(member => !string.IsNullOrWhiteSpace(member.Nationality)).Select(member => member.Nationality!).Distinct().OrderBy(value => value).ToListAsync(),
-            AvailableStates = await _context.FamilyMembers.AsNoTracking().Where(member => !string.IsNullOrWhiteSpace(member.State)).Select(member => member.State!).Distinct().OrderBy(value => value).ToListAsync(),
-            AvailableOccupations = await _context.FamilyMembers.AsNoTracking().Where(member => !string.IsNullOrWhiteSpace(member.Occupation)).Select(member => member.Occupation!).Distinct().OrderBy(value => value).ToListAsync(),
-            AvailableMaritalStatuses = await _context.FamilyMembers.AsNoTracking().Where(member => !string.IsNullOrWhiteSpace(member.MaritalStatus)).Select(member => member.MaritalStatus!).Distinct().OrderBy(value => value).ToListAsync(),
-            AvailableRelationshipTypes = await _context.FamilyRelationships.AsNoTracking().Where(relation => !string.IsNullOrWhiteSpace(relation.RelationshipType)).Select(relation => relation.RelationshipType!).Distinct().OrderBy(value => value).ToListAsync()
+            AvailableGenders = await memberFilter.Where(member => !string.IsNullOrWhiteSpace(member.Gender)).Select(member => member.Gender!).Distinct().OrderBy(value => value).ToListAsync(),
+            AvailableNationalities = await memberFilter.Where(member => !string.IsNullOrWhiteSpace(member.Nationality)).Select(member => member.Nationality!).Distinct().OrderBy(value => value).ToListAsync(),
+            AvailableStates = await memberFilter.Where(member => !string.IsNullOrWhiteSpace(member.State)).Select(member => member.State!).Distinct().OrderBy(value => value).ToListAsync(),
+            AvailableOccupations = await memberFilter.Where(member => !string.IsNullOrWhiteSpace(member.Occupation)).Select(member => member.Occupation!).Distinct().OrderBy(value => value).ToListAsync(),
+            AvailableMaritalStatuses = await memberFilter.Where(member => !string.IsNullOrWhiteSpace(member.MaritalStatus)).Select(member => member.MaritalStatus!).Distinct().OrderBy(value => value).ToListAsync(),
+            AvailableRelationshipTypes = await relationshipFilter.Where(relation => !string.IsNullOrWhiteSpace(relation.RelationshipType)).Select(relation => relation.RelationshipType!).Distinct().OrderBy(value => value).ToListAsync()
         };
 
         try
         {
-            var familyMembers = await SearchMembersAsync(searchTerm, gender, minAge, maxAge, nationality, state, religion, occupation, maritalStatus, relationshipType, familyBranch, createdFrom, createdTo, updatedFrom, updatedTo, sortBy);
-            var relationships = await SearchRelationshipsAsync(searchTerm, relationshipType, familyBranch, sortBy);
-            var users = await SearchUsersAsync(searchTerm, sortBy);
+            var familyMembers = await SearchMembersAsync(searchTerm, gender, minAge, maxAge, nationality, state, religion, occupation, maritalStatus, relationshipType, familyBranch, createdFrom, createdTo, updatedFrom, updatedTo, sortBy, currentUserId, isAdmin);
+            var relationships = await SearchRelationshipsAsync(searchTerm, relationshipType, familyBranch, sortBy, currentUserId, isAdmin);
+            var users = await SearchUsersAsync(searchTerm, sortBy, isAdmin);
             var notifications = await SearchNotificationsAsync(currentUserId, searchTerm, sortBy);
-            var auditLogs = await SearchAuditLogsAsync(searchTerm, sortBy);
-            var reports = await SearchReportsAsync(searchTerm, sortBy);
+            var auditLogs = await SearchAuditLogsAsync(searchTerm, sortBy, isAdmin);
+            var reports = await SearchReportsAsync(searchTerm, sortBy, isAdmin);
 
             viewModel.FamilyMembers = familyMembers;
             viewModel.Relationships = relationships;
@@ -100,10 +126,22 @@ public class SearchController : Controller
         return Json(GetSuggestions(query));
     }
 
-    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchMembersAsync(string query, string? gender, int? minAge, int? maxAge, string? nationality, string? state, string? religion, string? occupation, string? maritalStatus, string? relationshipType, string? familyBranch, DateTime? createdFrom, DateTime? createdTo, DateTime? updatedFrom, DateTime? updatedTo, string? sortBy)
+    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchMembersAsync(string query, string? gender, int? minAge, int? maxAge, string? nationality, string? state, string? religion, string? occupation, string? maritalStatus, string? relationshipType, string? familyBranch, DateTime? createdFrom, DateTime? createdTo, DateTime? updatedFrom, DateTime? updatedTo, string? sortBy, string? currentUserId, bool isAdmin)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var membersQuery = _context.FamilyMembers.AsNoTracking().AsQueryable();
+
+        if (!isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                membersQuery = membersQuery.Where(member => false);
+            }
+            else
+            {
+                membersQuery = membersQuery.Where(member => member.UserId == currentUserId);
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(normalizedQuery))
         {
@@ -229,10 +267,27 @@ public class SearchController : Controller
         }).ToList();
     }
 
-    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchRelationshipsAsync(string query, string? relationshipType, string? familyBranch, string? sortBy)
+    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchRelationshipsAsync(string query, string? relationshipType, string? familyBranch, string? sortBy, string? currentUserId, bool isAdmin)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
-        var relationshipQuery = _context.FamilyRelationships.AsNoTracking().AsQueryable();
+        var relationshipQuery = _context.FamilyRelationships.AsNoTracking()
+            .Include(relation => relation.Member)
+            .Include(relation => relation.RelatedMember)
+            .AsQueryable();
+
+        if (!isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                relationshipQuery = relationshipQuery.Where(relation => false);
+            }
+            else
+            {
+                relationshipQuery = relationshipQuery.Where(relation =>
+                    (relation.Member != null && relation.Member.UserId == currentUserId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == currentUserId));
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(normalizedQuery))
         {
@@ -274,8 +329,13 @@ public class SearchController : Controller
         }).ToList();
     }
 
-    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchUsersAsync(string query, string? sortBy)
+    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchUsersAsync(string query, string? sortBy, bool isAdmin)
     {
+        if (!isAdmin)
+        {
+            return Array.Empty<SearchResultItemViewModel>();
+        }
+
         var normalizedQuery = (query ?? string.Empty).Trim();
         var usersQuery = _userManager.Users.AsNoTracking().AsQueryable();
 
@@ -350,8 +410,13 @@ public class SearchController : Controller
         }).ToList();
     }
 
-    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchAuditLogsAsync(string query, string? sortBy)
+    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchAuditLogsAsync(string query, string? sortBy, bool isAdmin)
     {
+        if (!isAdmin)
+        {
+            return Array.Empty<SearchResultItemViewModel>();
+        }
+
         var normalizedQuery = (query ?? string.Empty).Trim();
         var logsQuery = _context.ActivityLogs.AsNoTracking().AsQueryable();
 
@@ -388,8 +453,13 @@ public class SearchController : Controller
         }).ToList();
     }
 
-    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchReportsAsync(string query, string? sortBy)
+    private async Task<IReadOnlyList<SearchResultItemViewModel>> SearchReportsAsync(string query, string? sortBy, bool isAdmin)
     {
+        if (!isAdmin)
+        {
+            return Array.Empty<SearchResultItemViewModel>();
+        }
+
         var normalizedQuery = (query ?? string.Empty).Trim();
         var reportsQuery = _context.FamilyMembers.AsNoTracking().AsQueryable();
 
