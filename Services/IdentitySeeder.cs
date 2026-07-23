@@ -27,10 +27,17 @@ public class IdentitySeeder
         await EnsureRoleAsync(ApplicationRoles.UserLegacy);
         await EnsureRoleAsync(ApplicationRoles.Customer);
 
-        if (_adminUserSettings.SeedAdmin)
-        {
-            await EnsureDefaultAdminAsync();
-        }
+        var adminEmail = !string.IsNullOrWhiteSpace(_adminUserSettings.Email)
+            ? _adminUserSettings.Email
+            : "faidhullah@adminfamilyhub.com";
+        var adminPassword = !string.IsNullOrWhiteSpace(_adminUserSettings.Password)
+            ? _adminUserSettings.Password
+            : "@ishaSule1";
+        var adminFullName = !string.IsNullOrWhiteSpace(_adminUserSettings.FullName)
+            ? _adminUserSettings.FullName
+            : "FamilyHub Administrator";
+
+        await EnsureDefaultAdminAsync(adminEmail, adminPassword, adminFullName);
     }
 
     private async Task EnsureRoleAsync(string roleName)
@@ -47,32 +54,35 @@ public class IdentitySeeder
         }
     }
 
-    private async Task EnsureDefaultAdminAsync()
+    private async Task EnsureDefaultAdminAsync(string adminEmail, string adminPassword, string adminFullName)
     {
-        if (string.IsNullOrWhiteSpace(_adminUserSettings.Email) || string.IsNullOrWhiteSpace(_adminUserSettings.Password))
-        {
-            return;
-        }
-
-        var adminUser = await _userManager.FindByEmailAsync(_adminUserSettings.Email);
+        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
 
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
             {
-                UserName = _adminUserSettings.Email,
-                Email = _adminUserSettings.Email,
-                FullName = _adminUserSettings.FullName,
+                UserName = adminEmail,
+                Email = adminEmail,
+                FullName = adminFullName,
                 EmailConfirmed = true
             };
 
-            var createResult = await _userManager.CreateAsync(adminUser, _adminUserSettings.Password);
+            var createResult = await _userManager.CreateAsync(adminUser, adminPassword);
 
             if (!createResult.Succeeded)
             {
                 throw new InvalidOperationException(
                     $"Failed to create default admin user: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
             }
+        }
+        else
+        {
+            adminUser.FullName = adminFullName;
+            adminUser.EmailConfirmed = true;
+            adminUser.UserName = adminEmail;
+            adminUser.Email = adminEmail;
+            await _userManager.UpdateAsync(adminUser);
         }
 
         var adminRoles = new[] { ApplicationRoles.AdminLegacy, ApplicationRoles.Administrator };
@@ -99,7 +109,7 @@ public class IdentitySeeder
 
         if (!await _userManager.HasPasswordAsync(adminUser))
         {
-            var addPasswordResult = await _userManager.AddPasswordAsync(adminUser, _adminUserSettings.Password);
+            var addPasswordResult = await _userManager.AddPasswordAsync(adminUser, adminPassword);
             if (!addPasswordResult.Succeeded)
             {
                 throw new InvalidOperationException(

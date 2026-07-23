@@ -1,6 +1,11 @@
 ﻿@{
     var successMessage = TempData["SuccessMessage"] as string;
     var errorMessage = TempData["ErrorMessage"] as string;
+    var userRoles = User?.Claims
+        .Where(claim => claim.Type == System.Security.Claims.ClaimTypes.Role)
+        .Select(claim => claim.Value)
+        .ToArray() ?? Array.Empty<string>();
+    var isSystemAdmin = userRoles.Any(ApplicationRoles.IsAdministratorRole);
 }
 
 <!DOCTYPE html>
@@ -41,7 +46,7 @@
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
-                                <a class="nav-link nav-pill px-3 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Dashboard">
+                                <a class="nav-link nav-pill px-3 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && (ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" || ViewContext.RouteData.Values["action"]?.ToString() == "AdminDashboard") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="@(isSystemAdmin ? "AdminDashboard" : "Dashboard")">
                                     <i class="bi bi-house-door me-2"></i>Dashboard
                                 </a>
                             </li>

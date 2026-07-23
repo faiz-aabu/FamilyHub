@@ -23,27 +23,46 @@
         }
     }
 
+    const togglePasswordVisibility = (button, input) => {
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        button.innerHTML = `<i class="bi ${isHidden ? 'bi-eye-slash' : 'bi-eye'}"></i>`;
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    };
+
+    const bindPasswordToggle = (button, input) => {
+        if (!button || !input || button.dataset.passwordToggleBound === 'true') {
+            return;
+        }
+
+        button.dataset.passwordToggleBound = 'true';
+        button.addEventListener('click', () => togglePasswordVisibility(button, input));
+    };
+
     const initPasswordToggle = () => {
+        document.querySelectorAll('.password-toggle-button').forEach(button => {
+            const group = button.closest('.input-group');
+            const input = group?.querySelector('.password-toggle-field');
+            bindPasswordToggle(button, input);
+        });
+
         document.querySelectorAll('.password-toggle-field').forEach(input => {
             const group = input.closest('.input-group');
-            if (!group || group.querySelector('.password-toggle-button')) {
+            if (!group) {
                 return;
             }
 
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'btn btn-outline-secondary password-toggle-button';
-            button.setAttribute('aria-label', 'Show password');
-            button.innerHTML = '<i class="bi bi-eye"></i>';
+            let button = group.querySelector('.password-toggle-button');
+            if (!button) {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'btn btn-outline-secondary password-toggle-button';
+                button.setAttribute('aria-label', 'Show password');
+                button.innerHTML = '<i class="bi bi-eye"></i>';
+                group.appendChild(button);
+            }
 
-            button.addEventListener('click', () => {
-                const isHidden = input.type === 'password';
-                input.type = isHidden ? 'text' : 'password';
-                button.innerHTML = `<i class="bi ${isHidden ? 'bi-eye-slash' : 'bi-eye'}"></i>`;
-                button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-            });
-
-            group.appendChild(button);
+            bindPasswordToggle(button, input);
         });
     };
 

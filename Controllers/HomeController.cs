@@ -50,6 +50,12 @@ public class HomeController : Controller
         return await ExecuteDashboardWithDiagnosticsAsync(nameof(Dashboard));
     }
 
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AdminDashboard()
+    {
+        return await ExecuteDashboardWithDiagnosticsAsync(nameof(AdminDashboard));
+    }
+
     private async Task<IActionResult> ExecuteDashboardWithDiagnosticsAsync(string actionName)
     {
         var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -80,7 +86,11 @@ public class HomeController : Controller
     private async Task<IActionResult> ShowDashboardViewAsync()
     {
         var userId = User?.Identity?.IsAuthenticated == true ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
-        var isAdmin = User?.IsInRole(ApplicationRoles.Administrator) == true || User?.IsInRole(ApplicationRoles.AdminLegacy) == true;
+        var roles = User?.Claims
+            .Where(claim => claim.Type == ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .ToArray() ?? Array.Empty<string>();
+        var isAdmin = roles.Any(ApplicationRoles.IsAdministratorRole);
 
         var membersQuery = _context.FamilyMembers.AsNoTracking();
         if (!isAdmin)
@@ -200,6 +210,7 @@ public class HomeController : Controller
 
         var dashboardViewModel = new DashboardViewModel
         {
+            IsAdmin = isAdmin,
             TotalFamilyMembers = members.Count,
             TotalRegisteredUsers = totalRegisteredUsers,
             TotalRelationships = totalRelationships,

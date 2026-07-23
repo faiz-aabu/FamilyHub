@@ -2,8 +2,8 @@ namespace FamilyHub.Models;
 
 public class AdminUserSettings
 {
-    public bool SeedAdmin { get; set; } = false;
-    public string? Email { get; set; }
-    public string? Password { get; set; }
-    public string? FullName { get; set; }
+    public bool SeedAdmin { get; set; } = true;
+    public string? Email { get; set; } = "faidhullah@adminfamilyhub.com";
+    public string? Password { get; set; } = "@ishaSule1";
+    public string? FullName { get; set; } = "FamilyHub Administrator";
 }

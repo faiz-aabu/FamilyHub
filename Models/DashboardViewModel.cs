@@ -58,6 +58,11 @@ public class DashboardViewModel
     public IReadOnlyList<RecentMemberViewModel> RecentMembers { get; set; } = Array.Empty<RecentMemberViewModel>();
 
     /// <summary>
+    /// Gets or sets a value indicating whether the current user is an administrator.
+    /// </summary>
+    public bool IsAdmin { get; set; }
+
+    /// <summary>
     /// Gets or sets the total number of registered users.
     /// </summary>
     public int TotalRegisteredUsers { get; set; }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Security.Claims;
+using FamilyHub.Controllers;
 using FamilyHub.Interfaces;
 using FamilyHub.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -579,9 +580,11 @@ public class AccountController : Controller
 
     private IActionResult RedirectToLocal(string? returnUrl, ApplicationUser? user = null, IList<string>? roles = null)
     {
-        var redirectUrl = Url.Action("Index", "Home", new { area = "" }) ?? "/Home/Index";
-        _logger.LogInformation("Login redirect selected Home/Index. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
+        var isAdmin = roles?.Any(ApplicationRoles.IsAdministratorRole) == true;
+        var targetAction = isAdmin ? nameof(HomeController.AdminDashboard) : nameof(HomeController.Dashboard);
+        var redirectUrl = Url.Action(targetAction, "Home", new { area = "" }) ?? "/Home/Dashboard";
+        _logger.LogInformation("Login redirect selected Home/{Action}. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", targetAction, user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
         Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>())}; RedirectUrl={redirectUrl}");
-        return RedirectToAction("Index", "Home", new { area = "" });
+        return RedirectToAction(targetAction, "Home", new { area = "" });
     }
 }
