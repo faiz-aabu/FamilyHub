@@ -63,9 +63,9 @@ public class FamilyHubDbContext : IdentityDbContext<ApplicationUser>
         .OnDelete(DeleteBehavior.Restrict);
 
     modelBuilder.Entity<FamilyMember>()
-        .HasOne(member => member.User)
+        .HasOne(member => member.Owner)
         .WithMany()
-        .HasForeignKey(member => member.UserId)
+        .HasForeignKey(member => member.OwnerId)
         .OnDelete(DeleteBehavior.Restrict);
 }
     }

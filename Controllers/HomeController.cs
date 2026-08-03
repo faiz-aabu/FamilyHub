@@ -101,7 +101,7 @@ public class HomeController : Controller
             }
             else
             {
-                membersQuery = membersQuery.Where(member => member.UserId == userId);
+                membersQuery = membersQuery.Where(member => member.OwnerId == userId);
             }
         }
 
@@ -118,8 +118,8 @@ public class HomeController : Controller
         if (!isAdmin)
         {
             relationshipQuery = relationshipQuery
-                .Where(relation => (relation.Member != null && relation.Member.UserId == userId)
-                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == userId));
+                .Where(relation => (relation.Member != null && relation.Member.OwnerId == userId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.OwnerId == userId));
         }
 
         var totalRelationships = await ExecuteDashboardQueryAsync("FamilyRelationships count", () => relationshipQuery.CountAsync());

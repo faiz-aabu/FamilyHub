@@ -55,7 +55,7 @@ public class FamilyTreeController : Controller
         {
             membersQuery = string.IsNullOrWhiteSpace(userId)
                 ? membersQuery.Where(member => false)
-                : membersQuery.Where(member => member.UserId == userId);
+                : membersQuery.Where(member => member.OwnerId == userId);
         }
 
         var members = await membersQuery
@@ -72,8 +72,8 @@ public class FamilyTreeController : Controller
         {
             linksQuery = string.IsNullOrWhiteSpace(userId)
                 ? linksQuery.Where(relation => false)
-                : linksQuery.Where(relation => (relation.Member != null && relation.Member.UserId == userId)
-                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == userId));
+                : linksQuery.Where(relation => (relation.Member != null && relation.Member.OwnerId == userId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.OwnerId == userId));
         }
 
         var links = await linksQuery

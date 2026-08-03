@@ -64,4 +64,28 @@ public interface IFamilyMemberService
     /// <param name="isAdmin">Whether the calling user has administrator privileges.</param>
     /// <returns>A list of matching family members.</returns>
     Task<IEnumerable<FamilyMember>> Search(string? searchTerm, string? userId = null, bool isAdmin = false);
+
+    /// <summary>
+    /// Determines whether the supplied user already owns at least one family profile.
+    /// </summary>
+    /// <param name="ownerId">The authenticated owner identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><see langword="true"/> when the user already owns a profile.</returns>
+    Task<bool> HasOwnedProfileAsync(string? ownerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Counts the number of family profiles owned by the supplied user.
+    /// </summary>
+    /// <param name="ownerId">The authenticated owner identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The number of owned family profiles.</returns>
+    Task<int> CountOwnedAsync(string? ownerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Determines whether the supplied user can create another family profile.
+    /// </summary>
+    /// <param name="ownerId">The authenticated owner identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><see langword="true"/> when the limit has not been reached.</returns>
+    Task<bool> CanCreateMoreAsync(string? ownerId, CancellationToken cancellationToken = default);
 }

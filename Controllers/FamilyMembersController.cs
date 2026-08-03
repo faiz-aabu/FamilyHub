@@ -64,6 +64,19 @@ public class FamilyMembersController : Controller
     {
         ViewBag.RelationshipOptions = GetRelationshipOptions();
         ViewBag.RelatedFamilyMembers = BuildRelatedFamilyMembersList(null, null);
+        var currentUserId = GetCurrentUserId();
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Challenge();
+        }
+
+        var canCreateMore = _familyMemberService.CanCreateMoreAsync(currentUserId).GetAwaiter().GetResult();
+        ViewBag.CanCreateMore = canCreateMore;
+        if (!canCreateMore)
+        {
+            TempData["WarningMessage"] = "Your family already contains the maximum of seven profiles.";
+        }
+
         return View(new FamilyMemberCreateViewModel());
     }
 
@@ -78,6 +91,19 @@ public class FamilyMembersController : Controller
     {
         ViewBag.RelationshipOptions = GetRelationshipOptions();
         ViewBag.RelatedFamilyMembers = BuildRelatedFamilyMembersList(null, model.RelatedFamilyMemberId);
+
+        var currentUserId = GetCurrentUserId();
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Challenge();
+        }
+
+        var canCreateMore = await _familyMemberService.CanCreateMoreAsync(currentUserId);
+        if (!canCreateMore)
+        {
+            ModelState.AddModelError(string.Empty, "Your family already contains the maximum of seven profiles. Delete an existing profile before adding another.");
+            return View(model);
+        }
 
         ValidateImageFile(model.ImageFile);
 
@@ -114,7 +140,6 @@ public class FamilyMembersController : Controller
             UpdatedAt = DateTime.UtcNow
         };
 
-        var currentUserId = GetCurrentUserId();
         var createdMember = await _familyMemberService.CreateAsync(familyMember, currentUserId);
         await _activityLogService.LogAsync(
             "Member Created",
@@ -428,7 +453,7 @@ public class FamilyMembersController : Controller
 
         if (familyMember is null)
         {
-            return View("NotFound");
+            return NotFound();
         }
 
         return View(familyMember);

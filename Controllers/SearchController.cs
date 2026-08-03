@@ -48,7 +48,7 @@ public class SearchController : Controller
             }
             else
             {
-                memberFilter = memberFilter.Where(member => member.UserId == currentUserId);
+                memberFilter = memberFilter.Where(member => member.OwnerId == currentUserId);
             }
         }
 
@@ -60,8 +60,8 @@ public class SearchController : Controller
                 : relationshipFilter
                     .Include(relation => relation.Member)
                     .Include(relation => relation.RelatedMember)
-                    .Where(relation => (relation.Member != null && relation.Member.UserId == currentUserId)
-                        || (relation.RelatedMember != null && relation.RelatedMember.UserId == currentUserId));
+                    .Where(relation => (relation.Member != null && relation.Member.OwnerId == currentUserId)
+                        || (relation.RelatedMember != null && relation.RelatedMember.OwnerId == currentUserId));
         }
 
         var viewModel = new SearchViewModel
@@ -143,7 +143,7 @@ public class SearchController : Controller
             }
             else
             {
-                membersQuery = membersQuery.Where(member => member.UserId == currentUserId);
+                membersQuery = membersQuery.Where(member => member.OwnerId == currentUserId);
             }
         }
 
@@ -288,8 +288,8 @@ public class SearchController : Controller
             else
             {
                 relationshipQuery = relationshipQuery.Where(relation =>
-                    (relation.Member != null && relation.Member.UserId == currentUserId)
-                    || (relation.RelatedMember != null && relation.RelatedMember.UserId == currentUserId));
+                    (relation.Member != null && relation.Member.OwnerId == currentUserId)
+                    || (relation.RelatedMember != null && relation.RelatedMember.OwnerId == currentUserId));
             }
         }
 

@@ -1,7 +1,7 @@
 @model FamilyHub.Models.FamilyMemberCreateViewModel
 
 @{
-    ViewData["Title"] = "Add Family Member";
+    ViewData["Title"] = "Create Your Profile";
 }
 
 <div class="container py-4">
@@ -9,26 +9,10 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-body p-4 p-md-5">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h2 class="fw-bold mb-1">Create Your Profile</h2>
-                            <p class="text-muted mb-0">Set up the first profile for your account and start building your private family space.</p>
-                        </div>
-                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">Cancel</a>
+                    <div class="mb-4">
+                        <h2 class="fw-bold mb-1">Create Your Profile</h2>
+                        <p class="text-muted mb-0">This first profile represents your account owner record.</p>
                     </div>
-
-                    @if (TempData["WarningMessage"] is string warningMessage)
-                    {
-                        <div class="alert alert-warning rounded-4" role="alert">@warningMessage</div>
-                    }
-
-                    @if (ViewBag.CanCreateMore == false)
-                    {
-                        <div class="alert alert-warning rounded-4" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Your family has reached the maximum of seven profiles. Remove an existing profile before adding another one.
-                        </div>
-                    }
 
                     <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -44,7 +28,6 @@
                                 <input asp-for="LastName" class="form-control" />
                                 <span asp-validation-for="LastName" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="Gender" class="form-label"></label>
                                 <input asp-for="Gender" class="form-control" />
@@ -55,7 +38,6 @@
                                 <input asp-for="DateOfBirth" class="form-control" type="date" />
                                 <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="Occupation" class="form-label"></label>
                                 <input asp-for="Occupation" class="form-control" />
@@ -66,7 +48,6 @@
                                 <input asp-for="School" class="form-control" />
                                 <span asp-validation-for="School" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="PhoneNumber" class="form-label"></label>
                                 <input asp-for="PhoneNumber" class="form-control" />
@@ -77,13 +58,11 @@
                                 <input asp-for="Email" class="form-control" />
                                 <span asp-validation-for="Email" class="text-danger"></span>
                             </div>
-
                             <div class="col-12">
                                 <label asp-for="Address" class="form-label"></label>
                                 <textarea asp-for="Address" class="form-control" rows="2"></textarea>
                                 <span asp-validation-for="Address" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="State" class="form-label"></label>
                                 <input asp-for="State" class="form-control" />
@@ -94,7 +73,6 @@
                                 <input asp-for="Nationality" class="form-control" />
                                 <span asp-validation-for="Nationality" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="BloodGroup" class="form-label"></label>
                                 <input asp-for="BloodGroup" class="form-control" />
@@ -105,7 +83,6 @@
                                 <input asp-for="Genotype" class="form-control" />
                                 <span asp-validation-for="Genotype" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="Allergies" class="form-label"></label>
                                 <input asp-for="Allergies" class="form-control" />
@@ -116,13 +93,11 @@
                                 <input asp-for="Hobbies" class="form-control" />
                                 <span asp-validation-for="Hobbies" class="text-danger"></span>
                             </div>
-
                             <div class="col-12">
                                 <label asp-for="Biography" class="form-label"></label>
                                 <textarea asp-for="Biography" class="form-control" rows="4"></textarea>
                                 <span asp-validation-for="Biography" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="MaritalStatus" class="form-label"></label>
                                 <input asp-for="MaritalStatus" class="form-control" />
@@ -135,7 +110,6 @@
                                 </select>
                                 <span asp-validation-for="Relationship" class="text-danger"></span>
                             </div>
-
                             <div class="col-md-6">
                                 <label asp-for="RelatedFamilyMemberId" class="form-label"></label>
                                 <select asp-for="RelatedFamilyMemberId" asp-items="@(ViewBag.RelatedFamilyMembers as SelectList)" class="form-select">
@@ -151,8 +125,7 @@
                         </div>
 
                         <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-dark rounded-pill px-4">Save</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-dark rounded-pill px-4">Save Profile</button>
                         </div>
                     </form>
                 </div>

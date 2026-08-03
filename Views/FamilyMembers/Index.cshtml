@@ -15,9 +15,11 @@
             </p>
         </div>
 
-        <a asp-action="Create" class="btn btn-light rounded-pill px-4 w-100 w-md-auto">
-            ➕ Add Family Member
-        </a>
+        <div class="d-flex flex-column flex-md-row gap-2">
+            <a asp-action="Create" class="btn btn-light rounded-pill px-4 w-100 w-md-auto">
+                <i class="bi bi-person-plus me-2"></i>Add Family Member
+            </a>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] is string successMessage)
@@ -28,6 +30,11 @@
     @if (TempData["ErrorMessage"] is string errorMessage)
     {
         <div class="alert alert-danger rounded-4" role="alert">@errorMessage</div>
+    }
+
+    @if (TempData["WarningMessage"] is string warningMessage)
+    {
+        <div class="alert alert-warning rounded-4" role="alert">@warningMessage</div>
     }
 
     <div class="card border-0 shadow-sm rounded-4 mb-4">

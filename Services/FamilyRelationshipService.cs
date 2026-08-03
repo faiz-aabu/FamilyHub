@@ -249,8 +249,8 @@ public class FamilyRelationshipService : IFamilyRelationshipService
         }
 
         return query.Where(relationship =>
-            (relationship.Member != null && relationship.Member.UserId == userId)
-            || (relationship.RelatedMember != null && relationship.RelatedMember.UserId == userId));
+            (relationship.Member != null && relationship.Member.OwnerId == userId)
+            || (relationship.RelatedMember != null && relationship.RelatedMember.OwnerId == userId));
     }
 
     private async Task ValidateRelationshipOwnershipAsync(FamilyRelationship relationship, string? userId, bool isAdmin)
@@ -265,7 +265,7 @@ public class FamilyRelationshipService : IFamilyRelationshipService
             .Where(x => x.Id == relationship.MemberId || x.Id == relationship.RelatedMemberId)
             .ToListAsync();
 
-        if (members.Count != 2 || members.Any(member => !string.Equals(member.UserId, userId, StringComparison.OrdinalIgnoreCase)))
+        if (members.Count != 2 || members.Any(member => !string.Equals(member.OwnerId, userId, StringComparison.OrdinalIgnoreCase)))
         {
             throw new UnauthorizedAccessException("You do not have permission to manage relationships for one or more selected family members.");
         }

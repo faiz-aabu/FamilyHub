@@ -68,13 +68,36 @@ public class FamilyMember
     /// Gets or sets the owner user identifier for this family member record.
     /// </summary>
     [Display(Name = "Owner")]
-    public string? UserId { get; set; }
+    public string? OwnerId { get; set; }
 
     /// <summary>
     /// Gets or sets the user who owns this family member record.
     /// </summary>
-    [ForeignKey(nameof(UserId))]
-    public ApplicationUser? User { get; set; }
+    [ForeignKey(nameof(OwnerId))]
+    public ApplicationUser? Owner { get; set; }
+
+    /// <summary>
+    /// Gets or sets the owner user identifier for this family member record.
+    /// This compatibility alias is kept for existing code paths.
+    /// </summary>
+    [NotMapped]
+    [Display(Name = "Owner")]
+    public string? UserId
+    {
+        get => OwnerId;
+        set => OwnerId = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the user who owns this family member record.
+    /// This compatibility alias is kept for existing code paths.
+    /// </summary>
+    [NotMapped]
+    public ApplicationUser? User
+    {
+        get => Owner;
+        set => Owner = value;
+    }
 
     /// <summary>
     /// Gets the full display name for this family member.

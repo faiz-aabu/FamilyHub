@@ -156,7 +156,7 @@ public class AccountController : Controller
         {
             UserName = model.Email,
             Email = model.Email,
-            FullName = model.FullName
+            FullName = string.IsNullOrWhiteSpace(model.FullName) ? model.Email : model.FullName
         };
 
         var result = await _userManager.CreateAsync(user, model.Password);
@@ -201,7 +201,7 @@ public class AccountController : Controller
                 Console.WriteLine($"[CaughtException] Registration notification failed; User={User.Identity?.Name ?? "Anonymous"}; Path={Request.Path}{Environment.NewLine}{ex}");
             }
 
-            return RedirectToLocal(returnUrl);
+            return RedirectToAction(nameof(FirstProfileRedirect), new { area = "" });
         }
 
         foreach (var error in result.Errors)
@@ -586,5 +586,21 @@ public class AccountController : Controller
         _logger.LogInformation("Login redirect selected Home/{Action}. UserId: {UserId}, Email: {Email}, Roles: {Roles}, RedirectUrl: {RedirectUrl}", targetAction, user?.Id, user?.Email, string.Join(", ", roles ?? Array.Empty<string>()), redirectUrl);
         Console.WriteLine($"[LoginRedirect] UserId={user?.Id}; Email={user?.Email}; Roles={string.Join(", ", roles ?? Array.Empty<string>())}; RedirectUrl={redirectUrl}");
         return RedirectToAction(targetAction, "Home", new { area = "" });
+    }
+
+    [Authorize]
+    public async Task<IActionResult> FirstProfileRedirect()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var familyMemberService = HttpContext.RequestServices.GetRequiredService<IFamilyMemberService>();
+        var hasProfile = await familyMemberService.HasOwnedProfileAsync(user.Id);
+        return hasProfile
+            ? RedirectToAction(nameof(HomeController.Dashboard), "Home", new { area = "" })
+            : RedirectToAction(nameof(FamilyMembersController.Create), "FamilyMembers", new { area = "" });
     }
 }

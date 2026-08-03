@@ -78,7 +78,7 @@ public class FamilyMemberService : IFamilyMemberService
     {
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            familyMember.UserId = userId;
+            familyMember.OwnerId = userId;
         }
 
         _context.FamilyMembers.Add(familyMember);
@@ -100,14 +100,14 @@ public class FamilyMemberService : IFamilyMemberService
             throw new InvalidOperationException("The requested family member was not found.");
         }
 
-        if (!isAdmin && !string.Equals(existingFamilyMember.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        if (!isAdmin && !string.Equals(existingFamilyMember.OwnerId, userId, StringComparison.OrdinalIgnoreCase))
         {
             throw new UnauthorizedAccessException("You are not allowed to update this family member.");
         }
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            familyMember.UserId = existingFamilyMember.UserId ?? userId;
+            familyMember.OwnerId = existingFamilyMember.OwnerId ?? userId;
         }
 
         _context.Entry(existingFamilyMember).CurrentValues.SetValues(familyMember);
@@ -183,6 +183,38 @@ public class FamilyMemberService : IFamilyMemberService
             .ToListAsync();
     }
 
+    /// <inheritdoc />
+    public async Task<bool> HasOwnedProfileAsync(string? ownerId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(ownerId))
+        {
+            return false;
+        }
+
+        return await _context.FamilyMembers
+            .AsNoTracking()
+            .AnyAsync(member => member.OwnerId == ownerId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CountOwnedAsync(string? ownerId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(ownerId))
+        {
+            return 0;
+        }
+
+        return await _context.FamilyMembers
+            .AsNoTracking()
+            .CountAsync(member => member.OwnerId == ownerId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> CanCreateMoreAsync(string? ownerId, CancellationToken cancellationToken = default)
+    {
+        return await CountOwnedAsync(ownerId, cancellationToken) < 7;
+    }
+
     private static IQueryable<FamilyMember> ApplyUserFilter(IQueryable<FamilyMember> query, string? userId, bool isAdmin)
     {
         if (isAdmin || string.IsNullOrWhiteSpace(userId))
@@ -190,6 +222,6 @@ public class FamilyMemberService : IFamilyMemberService
             return query;
         }
 
-        return query.Where(member => member.UserId == userId);
+        return query.Where(member => member.OwnerId == userId);
     }
 }
