@@ -264,7 +264,6 @@ C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\swae.build.ex.cache
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\FamilyHub.csproj.Up2Date
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\FamilyHub.dll
 C:\Users\DELL\Desktop\FamilyProject\obj\Debug\net8.0\refint\FamilyHub.dll
@@ -527,4 +526,18 @@ C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\build-validation\FamilyHub.
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\build-validation\FamilyHub.runtimeconfig.json
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\build-validation\FamilyHub.staticwebassets.endpoints.json
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\build-validation\FamilyHub.staticwebassets.runtime.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\web.config
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\appsettings.Development.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\appsettings.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\appsettings.Production.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\appsettings.Development.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\appsettings.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\appsettings.Production.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\FamilyHub.deps.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\FamilyHub.runtimeconfig.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\FamilyHub.staticwebassets.endpoints.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\build-validation\FamilyHub.staticwebassets.runtime.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\FamilyHub.deps.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\FamilyHub.runtimeconfig.json
+C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\publish\FamilyHub.staticwebassets.endpoints.json
 C:\Users\DELL\Desktop\FamilyProject\bin\Debug\net8.0\FamilyHub.exe

@@ -1,0 +1,1 @@
+dotnet run --project StudentPortal.Web\StudentPortal.Web.csproj

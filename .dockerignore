@@ -1,0 +1,13 @@
+bin/
+obj/
+.git/
+.vscode/
+.vs/
+.DS_Store
+*.user
+*.suo
+*.dbmdl
+*.log
+app.log
+build-validation/
+Dockerfile.txt
