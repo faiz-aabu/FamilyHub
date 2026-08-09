@@ -235,5 +235,19 @@ public class ActivityLogService : IActivityLogService
         return query;
     }
 
-    private static string Escape(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Replace('"', '"').Replace("\n", " ");
+    private static string Escape(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var sanitized = value.Replace("\r", " ").Replace("\n", " ");
+        if (sanitized.StartsWith('=') || sanitized.StartsWith('+') || sanitized.StartsWith('-') || sanitized.StartsWith('@'))
+        {
+            sanitized = "'" + sanitized;
+        }
+
+        return $"\"{sanitized.Replace("\"", "\"\"")}\"";
+    }
 }

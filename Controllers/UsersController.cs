@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyHub.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = ApplicationRoles.AdminRoles)]
 public class UsersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -513,6 +513,6 @@ public class UsersController : Controller
 
     private static string GenerateTemporaryPassword()
     {
-        return $"Temp{Guid.NewGuid():N}".Substring(0, 16);
+        return $"Temp!{Guid.NewGuid():N}".Substring(0, 16);
     }
 }

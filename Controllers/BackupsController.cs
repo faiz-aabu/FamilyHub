@@ -1,10 +1,11 @@
 using FamilyHub.Interfaces;
+using FamilyHub.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FamilyHub.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = ApplicationRoles.AdminRoles)]
 public class BackupsController : Controller
 {
     private readonly IBackupService _backupService;

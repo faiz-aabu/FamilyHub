@@ -397,7 +397,7 @@ public class FamilyMembersController : Controller
             }
 
             var memberName = familyMember.FullName;
-            await _familyMemberService.DeleteAsync(id);
+            await _familyMemberService.DeleteAsync(id, currentUserId, isAdmin);
             await _activityLogService.LogAsync(
                 "Member Deleted",
                 $"Deleted family member record for {memberName}.",
@@ -474,12 +474,6 @@ public class FamilyMembersController : Controller
         }
 
         // Validate size before saving.
-        const long maxFileSize = 2 * 1024 * 1024; // 2 MB
-        if (imageFile.Length > maxFileSize)
-        {
-            throw new InvalidOperationException("Uploaded image exceeds the maximum allowed size of 2 MB.");
-        }
-
         // Create the uploads folder if it does not exist yet.
         var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "family");
         Directory.CreateDirectory(uploadsFolder);
@@ -513,26 +507,9 @@ public class FamilyMembersController : Controller
             return;
         }
 
-        const long maxFileSize = 2 * 1024 * 1024; // 2 MB
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-        var allowedContentTypes = new[] { "image/jpeg", "image/png" };
-
-        if (imageFile.Length > maxFileSize)
+        if (!ImageUploadValidator.IsValid(imageFile, out var error))
         {
-            ModelState.AddModelError(nameof(imageFile), "Uploaded image must be 2 MB or smaller.");
-            return;
-        }
-
-        if (!allowedContentTypes.Contains(imageFile.ContentType))
-        {
-            ModelState.AddModelError(nameof(imageFile), "Only JPEG and PNG images are allowed.");
-            return;
-        }
-
-        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(extension))
-        {
-            ModelState.AddModelError(nameof(imageFile), "Only JPEG and PNG images are allowed.");
+            ModelState.AddModelError(nameof(imageFile), error);
         }
     }
 

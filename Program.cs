@@ -10,15 +10,16 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Information);
-builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Infrastructure", LogLevel.Information);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Information);
+}
 
 // Add MVC support with global anti-forgery validation
 builder.Services.AddControllersWithViews(options =>
@@ -53,8 +54,6 @@ if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Missing connection string 'DefaultConnection'. Configure it in appsettings.json, appsettings.Production.json, or environment variables.");
 }
-
-connectionString = EnsureSqlServerTrustConnection(connectionString);
 
 builder.Services.AddDbContext<FamilyHubDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -103,24 +102,6 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IBackupService, BackupService>();
 
-static string EnsureSqlServerTrustConnection(string connectionString)
-{
-    var normalized = connectionString.Trim();
-    var lower = normalized.ToLowerInvariant();
-
-    if (!lower.Contains("encrypt="))
-    {
-        normalized += ";Encrypt=True";
-    }
-
-    if (!lower.Contains("trustservercertificate="))
-    {
-        normalized += ";TrustServerCertificate=True";
-    }
-
-    return normalized;
-}
-
 var app = builder.Build();
 
 // Apply migrations and seed roles/admin
@@ -129,81 +110,24 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
 
     var dbContext = services.GetRequiredService<FamilyHubDbContext>();
-    dbContext.Database.Migrate();
-
-    var startupLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseDiagnostics");
-    try
+    if (builder.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     {
-        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
-        var pendingMigrationList = pendingMigrations.ToArray();
-        startupLogger.LogInformation("Database migration diagnostic completed. Pending migrations: {PendingMigrations}", pendingMigrationList.Length == 0 ? "none" : string.Join(", ", pendingMigrationList));
-        Console.WriteLine($"[DatabaseDiagnostics] Pending migrations: {(pendingMigrationList.Length == 0 ? "none" : string.Join(", ", pendingMigrationList))}");
-
-        await LogMissingDatabaseObjectsAsync(dbContext, startupLogger);
-    }
-    catch (Exception ex)
-    {
-        startupLogger.LogError(ex, "Database schema diagnostics failed. The application will continue using the existing migration behavior.");
-        Console.WriteLine($"[DatabaseDiagnostics] Schema diagnostics failed.{Environment.NewLine}{ex}");
+        await dbContext.Database.MigrateAsync();
     }
 
     var identitySeeder = services.GetRequiredService<IdentitySeeder>();
     await identitySeeder.SeedAsync();
 }
 
-static async Task LogMissingDatabaseObjectsAsync(FamilyHubDbContext dbContext, ILogger logger)
+if (app.Environment.IsDevelopment())
 {
-    var connection = dbContext.Database.GetDbConnection();
-    if (connection.State != System.Data.ConnectionState.Open)
-    {
-        await connection.OpenAsync();
-    }
-
-    await using var command = connection.CreateCommand();
-    command.CommandText = "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS";
-
-    var actualColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    await using var reader = await command.ExecuteReaderAsync();
-    while (await reader.ReadAsync())
-    {
-        actualColumns.Add($"{reader.GetString(0)}.{reader.GetString(1)}.{reader.GetString(2)}");
-    }
-
-    var missingObjects = new List<string>();
-    foreach (var entityType in dbContext.Model.GetEntityTypes())
-    {
-        var tableName = entityType.GetTableName();
-        if (string.IsNullOrWhiteSpace(tableName))
-        {
-            continue;
-        }
-
-        var schema = entityType.GetSchema() ?? "dbo";
-        var tableObject = StoreObjectIdentifier.Table(tableName, schema);
-        foreach (var property in entityType.GetProperties())
-        {
-            var columnName = property.GetColumnName(tableObject);
-            if (!string.IsNullOrWhiteSpace(columnName) && !actualColumns.Contains($"{schema}.{tableName}.{columnName}"))
-            {
-                missingObjects.Add($"{schema}.{tableName}.{columnName}");
-            }
-        }
-    }
-
-    if (missingObjects.Count == 0)
-    {
-        logger.LogInformation("Database schema diagnostic passed. All EF Core mapped tables and columns exist.");
-        Console.WriteLine("[DatabaseDiagnostics] All EF Core mapped tables and columns exist.");
-        return;
-    }
-
-    var missing = string.Join(", ", missingObjects.Distinct(StringComparer.OrdinalIgnoreCase));
-    logger.LogError("Database schema mismatch detected. Missing EF Core mapped columns: {MissingColumns}", missing);
-    Console.WriteLine($"[DatabaseDiagnostics] Database schema mismatch. Missing columns: {missing}");
+    app.UseDeveloperExceptionPage();
 }
-
-// Temporarily show full exception details while debugging login failures.
-app.UseDeveloperExceptionPage();
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 
 app.Use(async (context, next) =>
 {
@@ -217,7 +141,6 @@ app.Use(async (context, next) =>
         var user = context.User?.Identity?.Name ?? "Anonymous";
         var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("GlobalExceptionMiddleware");
         logger.LogError(ex, "Unhandled exception before error page. RequestId: {RequestId}, Path: {Path}, User: {User}, ExceptionType: {ExceptionType}, Message: {Message}", requestId, context.Request.Path, user, ex.GetType().FullName, ex.Message);
-        Console.WriteLine($"[GlobalExceptionMiddleware] RequestId={requestId}; Path={context.Request.Path}; User={user}; ExceptionType={ex.GetType().FullName}; Message={ex.Message}{Environment.NewLine}{ex}");
         throw;
     }
 });

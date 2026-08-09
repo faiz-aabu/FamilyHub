@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FamilyHub")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1eba197ea992af55e6f4d1bf1bb69806b8e4d59b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a9a2ae34a53db5796448b81f6027f16dadb4646")]
 [assembly: System.Reflection.AssemblyProductAttribute("FamilyHub")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FamilyHub")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

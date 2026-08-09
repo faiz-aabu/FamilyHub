@@ -14,24 +14,25 @@ public class BackupService : IBackupService
     private readonly FamilyHubDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
+    private readonly string _backupFolder;
 
     public BackupService(FamilyHubDbContext context, IConfiguration configuration, IWebHostEnvironment environment)
     {
         _context = context;
         _configuration = configuration;
         _environment = environment;
+        _backupFolder = Path.Combine(_environment.ContentRootPath, "App_Data", "backups");
     }
 
     public async Task<string> CreateBackupAsync(string? backupName = null)
     {
-        var backupFolder = Path.Combine(_environment.WebRootPath, "backups");
-        Directory.CreateDirectory(backupFolder);
+        Directory.CreateDirectory(_backupFolder);
 
         var fileName = string.IsNullOrWhiteSpace(backupName)
             ? $"familyhub-{DateTime.UtcNow:yyyyMMddHHmmss}.bak"
             : $"{SanitizeFileName(backupName)}.bak";
 
-        var filePath = Path.Combine(backupFolder, fileName);
+        var filePath = GetBackupPath(fileName);
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -45,7 +46,7 @@ public class BackupService : IBackupService
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var query = $"BACKUP DATABASE [{databaseName}] TO DISK = '{filePath.Replace("\\", "\\\\")}' WITH FORMAT, INIT, NAME = 'FamilyHub Backup';";
+        var query = $"BACKUP DATABASE {QuoteIdentifier(databaseName)} TO DISK = N'{EscapeSqlLiteral(filePath)}' WITH FORMAT, INIT, NAME = N'FamilyHub Backup';";
         await using var command = new SqlCommand(query, connection);
         await command.ExecuteNonQueryAsync();
 
@@ -54,7 +55,12 @@ public class BackupService : IBackupService
 
     public async Task<bool> RestoreBackupAsync(string fileName)
     {
-        var filePath = Path.Combine(_environment.WebRootPath, "backups", fileName);
+        if (!_environment.IsDevelopment())
+        {
+            throw new InvalidOperationException("Database restore is disabled outside development. Restore the database through your managed database provider.");
+        }
+
+        var filePath = GetBackupPath(fileName);
         if (!File.Exists(filePath))
         {
             return false;
@@ -72,40 +78,41 @@ public class BackupService : IBackupService
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var query = $"USE [master]; ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; RESTORE DATABASE [{databaseName}] FROM DISK = '{filePath.Replace("\\", "\\\\")}' WITH REPLACE; ALTER DATABASE [{databaseName}] SET MULTI_USER;";
+        var quotedDatabaseName = QuoteIdentifier(databaseName);
+        var query = $"USE [master]; ALTER DATABASE {quotedDatabaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE; RESTORE DATABASE {quotedDatabaseName} FROM DISK = N'{EscapeSqlLiteral(filePath)}' WITH REPLACE; ALTER DATABASE {quotedDatabaseName} SET MULTI_USER;";
         await using var command = new SqlCommand(query, connection);
         await command.ExecuteNonQueryAsync();
         return true;
     }
 
-    public async Task<bool> DeleteBackupAsync(string fileName)
+    public Task<bool> DeleteBackupAsync(string fileName)
     {
-        var filePath = Path.Combine(_environment.WebRootPath, "backups", fileName);
+        var filePath = GetBackupPath(fileName);
         if (!File.Exists(filePath))
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         File.Delete(filePath);
-        return true;
+        return Task.FromResult(true);
     }
 
-    public async Task<bool> RenameBackupAsync(string oldFileName, string newFileName)
+    public Task<bool> RenameBackupAsync(string oldFileName, string newFileName)
     {
-        var oldPath = Path.Combine(_environment.WebRootPath, "backups", oldFileName);
-        var newPath = Path.Combine(_environment.WebRootPath, "backups", $"{SanitizeFileName(newFileName)}.bak");
+        var oldPath = GetBackupPath(oldFileName);
+        var newPath = GetBackupPath($"{SanitizeFileName(newFileName)}.bak");
         if (!File.Exists(oldPath))
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         File.Move(oldPath, newPath);
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task<byte[]?> DownloadBackupAsync(string fileName)
     {
-        var filePath = Path.Combine(_environment.WebRootPath, "backups", fileName);
+        var filePath = GetBackupPath(fileName);
         if (!File.Exists(filePath))
         {
             return null;
@@ -114,16 +121,16 @@ public class BackupService : IBackupService
         return await File.ReadAllBytesAsync(filePath);
     }
 
-    public async Task<BackupDetailViewModel?> GetBackupDetailsAsync(string fileName)
+    public Task<BackupDetailViewModel?> GetBackupDetailsAsync(string fileName)
     {
-        var filePath = Path.Combine(_environment.WebRootPath, "backups", fileName);
+        var filePath = GetBackupPath(fileName);
         if (!File.Exists(filePath))
         {
-            return null;
+            return Task.FromResult<BackupDetailViewModel?>(null);
         }
 
         var info = new FileInfo(filePath);
-        return new BackupDetailViewModel
+        return Task.FromResult<BackupDetailViewModel?>(new BackupDetailViewModel
         {
             FileName = fileName,
             DisplayName = Path.GetFileNameWithoutExtension(fileName),
@@ -131,15 +138,14 @@ public class BackupService : IBackupService
             CreatedAt = info.LastWriteTimeUtc,
             SizeBytes = info.Length,
             Status = "Ready"
-        };
+        });
     }
 
     public async Task<BackupIndexViewModel> GetBackupIndexAsync(string? searchTerm = null, string? sortOrder = null)
     {
-        var backupFolder = Path.Combine(_environment.WebRootPath, "backups");
-        Directory.CreateDirectory(backupFolder);
+        Directory.CreateDirectory(_backupFolder);
 
-        var files = Directory.GetFiles(backupFolder, "*.bak")
+        var files = Directory.GetFiles(_backupFolder, "*.bak")
             .Select(path => new FileInfo(path))
             .Select(file => new BackupFileInfo
             {
@@ -219,6 +225,37 @@ public class BackupService : IBackupService
             builder.Replace(invalidChar.ToString(), string.Empty);
         }
 
-        return builder.ToString().Trim().Replace(" ", "-");
+        var sanitized = builder.ToString().Trim().Replace(" ", "-");
+        if (string.IsNullOrWhiteSpace(sanitized) || sanitized is "." or "..")
+        {
+            throw new InvalidOperationException("A valid backup name is required.");
+        }
+
+        return sanitized;
     }
+
+    private string GetBackupPath(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)
+            || !string.Equals(Path.GetExtension(fileName), ".bak", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(Path.GetFileName(fileName), fileName, StringComparison.Ordinal)
+            || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            throw new InvalidOperationException("Invalid backup file name.");
+        }
+
+        Directory.CreateDirectory(_backupFolder);
+        var path = Path.GetFullPath(Path.Combine(_backupFolder, fileName));
+        var root = Path.GetFullPath(_backupFolder) + Path.DirectorySeparatorChar;
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Invalid backup file path.");
+        }
+
+        return path;
+    }
+
+    private static string QuoteIdentifier(string identifier) => $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
+
+    private static string EscapeSqlLiteral(string value) => value.Replace("'", "''", StringComparison.Ordinal);
 }

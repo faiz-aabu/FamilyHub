@@ -11,7 +11,7 @@ using PdfSharpCore.Pdf;
 
 namespace FamilyHub.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = ApplicationRoles.AdminRoles)]
 public class ReportsController : Controller
 {
     private readonly FamilyHubDbContext _context;

@@ -233,7 +233,7 @@ public class FamilyRelationshipService : IFamilyRelationshipService
             }
         }
 
-        if (WouldCreateCircularRelationship(relationship, currentRelationshipId))
+        if (await WouldCreateCircularRelationshipAsync(relationship, currentRelationshipId))
         {
             throw new RelationshipValidationException("This relationship would create a circular family connection.", nameof(relationship.RelationshipType));
         }
@@ -271,17 +271,18 @@ public class FamilyRelationshipService : IFamilyRelationshipService
         }
     }
 
-    private bool WouldCreateCircularRelationship(FamilyRelationship relationship, int? currentRelationshipId)
+    private async Task<bool> WouldCreateCircularRelationshipAsync(FamilyRelationship relationship, int? currentRelationshipId)
     {
         if (!IsAncestryRelationshipType(relationship.RelationshipType))
         {
             return false;
         }
 
-        var existingRelationships = _context.FamilyRelationships
+        var ancestryTypes = new[] { "Father", "Mother", "Son", "Daughter", "Guardian", "Grandfather", "Grandmother", "Grandchild" };
+        var existingRelationships = await _context.FamilyRelationships
             .AsNoTracking()
-            .Where(x => x.Id != currentRelationshipId && IsAncestryRelationshipType(x.RelationshipType))
-            .ToList();
+            .Where(x => x.Id != currentRelationshipId && x.RelationshipType != null && ancestryTypes.Contains(x.RelationshipType))
+            .ToListAsync();
 
         var adjacency = new Dictionary<int, List<int>>();
         foreach (var existingRelationship in existingRelationships)

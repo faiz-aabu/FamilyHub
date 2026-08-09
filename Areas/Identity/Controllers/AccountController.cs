@@ -484,6 +484,12 @@ public class AccountController : Controller
 
             if (model.ProfilePictureFile is not null && model.ProfilePictureFile.Length > 0)
             {
+                if (!ImageUploadValidator.IsValid(model.ProfilePictureFile, out var imageError))
+                {
+                    TempData["ErrorMessage"] = imageError;
+                    return RedirectToAction(nameof(Manage));
+                }
+
                 var fileName = $"{Guid.NewGuid():N}{Path.GetExtension(model.ProfilePictureFile.FileName)}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
                 await using (var stream = new FileStream(filePath, FileMode.Create))

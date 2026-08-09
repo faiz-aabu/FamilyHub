@@ -1,0 +1,21 @@
+# Build outputs
+bin/
+obj/
+publish/
+build-validation/
+
+# Local tooling and logs
+.vs/
+.vscode/
+*.user
+*.suo
+*.log
+
+# Sensitive local configuration
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+
+# Runtime-generated files
+wwwroot/images/profiles/
+App_Data/

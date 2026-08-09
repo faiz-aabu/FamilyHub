@@ -27,15 +27,22 @@ public class IdentitySeeder
         await EnsureRoleAsync(ApplicationRoles.UserLegacy);
         await EnsureRoleAsync(ApplicationRoles.Customer);
 
-        var adminEmail = !string.IsNullOrWhiteSpace(_adminUserSettings.Email)
-            ? _adminUserSettings.Email
-            : "faidhullah@adminfamilyhub.com";
-        var adminPassword = !string.IsNullOrWhiteSpace(_adminUserSettings.Password)
-            ? _adminUserSettings.Password
-            : "@ishaSule1";
-        var adminFullName = !string.IsNullOrWhiteSpace(_adminUserSettings.FullName)
-            ? _adminUserSettings.FullName
-            : "FamilyHub Administrator";
+        if (!_adminUserSettings.SeedAdmin)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_adminUserSettings.Email)
+            || string.IsNullOrWhiteSpace(_adminUserSettings.Password))
+        {
+            throw new InvalidOperationException("Admin seeding is enabled, but AdminUser:Email and AdminUser:Password are not configured.");
+        }
+
+        var adminEmail = _adminUserSettings.Email;
+        var adminPassword = _adminUserSettings.Password;
+        var adminFullName = string.IsNullOrWhiteSpace(_adminUserSettings.FullName)
+            ? "FamilyHub Administrator"
+            : _adminUserSettings.FullName;
 
         await EnsureDefaultAdminAsync(adminEmail, adminPassword, adminFullName);
     }

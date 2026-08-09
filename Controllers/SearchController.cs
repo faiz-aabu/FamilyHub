@@ -125,7 +125,7 @@ public class SearchController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Suggestions(string? query)
+    public IActionResult Suggestions(string? query)
     {
         return Json(GetSuggestions(query));
     }

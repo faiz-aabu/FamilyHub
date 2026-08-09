@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FamilyHub.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = ApplicationRoles.AdminRoles)]
 public class ActivityLogsController : Controller
 {
     private readonly IActivityLogService _activityLogService;

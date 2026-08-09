@@ -35,7 +35,7 @@
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto align-items-lg-center flex-nowrap" style="gap: 0.5rem;">
-                        @if (User.Identity?.IsAuthenticated ?? false)
+                        @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <a class="nav-link nav-pill px-3" asp-controller="Search" asp-action="Index">
@@ -43,7 +43,7 @@
                                 </a>
                             </li>
                         }
-                        @if (User.Identity?.IsAuthenticated ?? false)
+                        @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <a class="nav-link nav-pill px-3 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && (ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" || ViewContext.RouteData.Values["action"]?.ToString() == "AdminDashboard") ? "active" : "")" asp-area="" asp-controller="Home" asp-action="@(isSystemAdmin ? "AdminDashboard" : "Dashboard")">
@@ -85,7 +85,7 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto align-items-lg-center flex-nowrap" style="gap: 0.5rem;">
-                        @if (User.Identity?.IsAuthenticated ?? false)
+                        @if (User?.Identity?.IsAuthenticated == true)
                         {
                             @if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.AdminLegacy))
                             {

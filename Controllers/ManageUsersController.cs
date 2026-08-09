@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyHub.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = ApplicationRoles.AdminRoles)]
 public class ManageUsersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;

@@ -28,16 +28,14 @@ public class NotificationService : INotificationService
     public async Task CreateForUserAndAdminsAsync(string userId, string title, string message, string? linkUrl = null, string? relatedEntityType = null, int? relatedEntityId = null, string type = "Information", string? icon = null)
     {
         var recipientIds = new List<string> { userId };
-        var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
-        recipientIds.AddRange(adminUsers.Select(user => user.Id));
+        recipientIds.AddRange(await GetAdministratorIdsAsync());
 
         await CreateNotificationsAsync(recipientIds.Distinct(StringComparer.OrdinalIgnoreCase), title, message, linkUrl, relatedEntityType, relatedEntityId, type, icon);
     }
 
     public async Task CreateForAdminsAsync(string title, string message, string? linkUrl = null, string? relatedEntityType = null, int? relatedEntityId = null, string type = "Information", string? icon = null)
     {
-        var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
-        var recipientIds = adminUsers.Select(user => user.Id).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var recipientIds = (await GetAdministratorIdsAsync()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (recipientIds.Count == 0)
         {
             return;
@@ -227,5 +225,12 @@ public class NotificationService : INotificationService
             "error" => "bi-x-circle-fill",
             _ => "bi-info-circle-fill"
         };
+    }
+
+    private async Task<IReadOnlyList<string>> GetAdministratorIdsAsync()
+    {
+        var legacyAdmins = await _userManager.GetUsersInRoleAsync(ApplicationRoles.AdminLegacy);
+        var administrators = await _userManager.GetUsersInRoleAsync(ApplicationRoles.Administrator);
+        return legacyAdmins.Concat(administrators).Select(user => user.Id).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 }
